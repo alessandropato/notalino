@@ -189,13 +189,19 @@ Legenda: ✅ fatto · 🚧 in corso · ⬜ da fare
 - ✅ **Fase 13 — Progetti CRUD**: creazione, descrizione editabile, conteggio riunioni; spostamento riunione predisposto (`Meeting.copyWith(projectId:)`).
 - ✅ **Fase 14 — Tracker costi**: `UsageRecord` per ogni operazione, `UsageScreen` (mese/totale/breakdown).
 - 🚧 **Fase 15 — Rifinitura estetica**: base glass completa; micro-interazioni/transizioni da affinare.
-- ⬜ **Fase 16 — Verifica Android + test end-to-end**: unit test presenti (costi, parsing JSON, markdown); build su device iOS/Android e percorso critico ancora da verificare.
+- 🚧 **Fase 16 — Verifica build + test**: ✅ build **iOS device** riuscita (`Runner.app` 48.5 MB); ✅ 21 unit/widget/integration test verdi; ⬜ build/run su Android e su simulatore iOS (vedi §11, limite ffmpeg su Apple Silicon), percorso critico su device reale da verificare con API key reale.
 
 **Test presenti**: `test/cost_estimator_test.dart`, `test/json_extractor_test.dart`, `test/markdown_templates_test.dart` (15 test, verdi). `flutter analyze`: 0 issue.
 
 ---
 
 ## 11. Problemi noti / TODO / decisioni rimandate
+- **Build verificata**: `flutter build ios --no-codesign` (device) → ✅ `Runner.app` 48.5 MB. `flutter analyze` 0 issue, `flutter test` 21 verdi.
+- **⚠️ ffmpeg e simulatore iOS su Apple Silicon**: `ffmpeg_kit_flutter_new` 1.6.1 distribuisce un `.framework` "fat" (armv7/i386/x86_64/arm64) **senza** slice arm64-**simulatore**. La slice arm64 è quella *device*, quindi:
+  - build **device** iOS → OK ✅ (validata);
+  - build **simulatore** su Mac Apple Silicon → **fallisce al linking** ("built for 'iOS'"). Il simulatore Intel (x86_64) funzionerebbe.
+  - Il link fallisce a build-time perché il framework è linkato a prescindere dall'uso: un fallback runtime dell'`AudioProcessor` NON risolve.
+  - **Opzioni**: (a) sviluppare/testare su device fisico; (b) testare su un Mac Intel; (c) sostituire con un pacchetto ffmpeg che distribuisce **XCFramework** con slice simulatore (verificarne il mantenimento) — l'astrazione `AudioProcessor` isola già il resto del codice. Decisione rimandata: per l'MVP la build device è sufficiente.
 - **Minimi di piattaforma** (imposti da `ffmpeg_kit_flutter_new`): Android `minSdk 24`, iOS deployment target `14.0`. Già configurati in `android/app/build.gradle.kts`, `ios/Podfile` e `project.pbxproj`.
 - iOS Share Extension + App Group entitlement da creare in Xcode (vedi §6). Import via file picker funziona nel frattempo.
 - `ffmpeg_kit_flutter_new`: verificare build effettiva su device iOS/Android (aumenta dimensione binario ~ per il pacchetto full-gpl; valutare variante "min" se il peso è un problema — l'ffmpeg qui serve solo per segment/transcode, la variante audio-only basta).
