@@ -72,7 +72,7 @@ class SettingsController extends AsyncNotifier<SettingsState> {
   }
 
   Future<void> setChatPricing(ModelPricing pricing) async {
-    final SettingsState current = state.valueOrNull ?? await _load();
+    final SettingsState current = state.value ?? await _load();
     await _repo.setChatPricing(current.model, pricing);
     state = AsyncData(await _load());
   }

@@ -6198,10 +6198,7 @@ final class $$ProjectsTableReferences
   static MultiTypedResultKey<$ProjectContextsTable, List<ProjectContextRow>>
   _projectContextsRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
     db.projectContexts,
-    aliasName: $_aliasNameGenerator(
-      db.projects.id,
-      db.projectContexts.projectId,
-    ),
+    aliasName: 'projects__id__project_contexts__project_id',
   );
 
   $$ProjectContextsTableProcessedTableManager get projectContextsRefs {
@@ -6221,7 +6218,7 @@ final class $$ProjectsTableReferences
   static MultiTypedResultKey<$MeetingsTable, List<MeetingRow>>
   _meetingsRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
     db.meetings,
-    aliasName: $_aliasNameGenerator(db.projects.id, db.meetings.projectId),
+    aliasName: 'projects__id__meetings__project_id',
   );
 
   $$MeetingsTableProcessedTableManager get meetingsRefs {
@@ -6239,7 +6236,7 @@ final class $$ProjectsTableReferences
   static MultiTypedResultKey<$QaThreadsTable, List<QaThreadRow>>
   _qaThreadsRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
     db.qaThreads,
-    aliasName: $_aliasNameGenerator(db.projects.id, db.qaThreads.projectId),
+    aliasName: 'projects__id__qa_threads__project_id',
   );
 
   $$QaThreadsTableProcessedTableManager get qaThreadsRefs {
@@ -6748,9 +6745,7 @@ final class $$ProjectContextsTableReferences
   );
 
   static $ProjectsTable _projectIdTable(_$AppDatabase db) =>
-      db.projects.createAlias(
-        $_aliasNameGenerator(db.projectContexts.projectId, db.projects.id),
-      );
+      db.projects.createAlias('project_contexts__project_id__projects__id');
 
   $$ProjectsTableProcessedTableManager get projectId {
     final $_column = $_itemColumn<String>('project_id')!;
@@ -7078,8 +7073,8 @@ final class $$MeetingsTableReferences
     extends BaseReferences<_$AppDatabase, $MeetingsTable, MeetingRow> {
   $$MeetingsTableReferences(super.$_db, super.$_table, super.$_typedResult);
 
-  static $ProjectsTable _projectIdTable(_$AppDatabase db) => db.projects
-      .createAlias($_aliasNameGenerator(db.meetings.projectId, db.projects.id));
+  static $ProjectsTable _projectIdTable(_$AppDatabase db) =>
+      db.projects.createAlias('meetings__project_id__projects__id');
 
   $$ProjectsTableProcessedTableManager get projectId {
     final $_column = $_itemColumn<String>('project_id')!;
@@ -7098,7 +7093,7 @@ final class $$MeetingsTableReferences
   static MultiTypedResultKey<$RecordingsTable, List<RecordingRow>>
   _recordingsRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
     db.recordings,
-    aliasName: $_aliasNameGenerator(db.meetings.id, db.recordings.meetingId),
+    aliasName: 'meetings__id__recordings__meeting_id',
   );
 
   $$RecordingsTableProcessedTableManager get recordingsRefs {
@@ -7116,7 +7111,7 @@ final class $$MeetingsTableReferences
   static MultiTypedResultKey<$TranscriptsTable, List<TranscriptRow>>
   _transcriptsRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
     db.transcripts,
-    aliasName: $_aliasNameGenerator(db.meetings.id, db.transcripts.meetingId),
+    aliasName: 'meetings__id__transcripts__meeting_id',
   );
 
   $$TranscriptsTableProcessedTableManager get transcriptsRefs {
@@ -7134,10 +7129,7 @@ final class $$MeetingsTableReferences
   static MultiTypedResultKey<$MeetingReportsTable, List<MeetingReportRow>>
   _meetingReportsRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
     db.meetingReports,
-    aliasName: $_aliasNameGenerator(
-      db.meetings.id,
-      db.meetingReports.meetingId,
-    ),
+    aliasName: 'meetings__id__meeting_reports__meeting_id',
   );
 
   $$MeetingReportsTableProcessedTableManager get meetingReportsRefs {
@@ -7155,10 +7147,7 @@ final class $$MeetingsTableReferences
   static MultiTypedResultKey<$MeetingMarkdownsTable, List<MeetingMarkdownRow>>
   _meetingMarkdownsRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
     db.meetingMarkdowns,
-    aliasName: $_aliasNameGenerator(
-      db.meetings.id,
-      db.meetingMarkdowns.meetingId,
-    ),
+    aliasName: 'meetings__id__meeting_markdowns__meeting_id',
   );
 
   $$MeetingMarkdownsTableProcessedTableManager get meetingMarkdownsRefs {
@@ -7835,9 +7824,7 @@ final class $$RecordingsTableReferences
   $$RecordingsTableReferences(super.$_db, super.$_table, super.$_typedResult);
 
   static $MeetingsTable _meetingIdTable(_$AppDatabase db) =>
-      db.meetings.createAlias(
-        $_aliasNameGenerator(db.recordings.meetingId, db.meetings.id),
-      );
+      db.meetings.createAlias('recordings__meeting_id__meetings__id');
 
   $$MeetingsTableProcessedTableManager get meetingId {
     final $_column = $_itemColumn<String>('meeting_id')!;
@@ -7860,10 +7847,7 @@ final class $$RecordingsTableReferences
   _recordingTranscriptsRefsTable(_$AppDatabase db) =>
       MultiTypedResultKey.fromTable(
         db.recordingTranscripts,
-        aliasName: $_aliasNameGenerator(
-          db.recordings.id,
-          db.recordingTranscripts.recordingId,
-        ),
+        aliasName: 'recordings__id__recording_transcripts__recording_id',
       );
 
   $$RecordingTranscriptsTableProcessedTableManager
@@ -8384,13 +8368,8 @@ final class $$RecordingTranscriptsTableReferences
     super.$_typedResult,
   );
 
-  static $RecordingsTable _recordingIdTable(_$AppDatabase db) =>
-      db.recordings.createAlias(
-        $_aliasNameGenerator(
-          db.recordingTranscripts.recordingId,
-          db.recordings.id,
-        ),
-      );
+  static $RecordingsTable _recordingIdTable(_$AppDatabase db) => db.recordings
+      .createAlias('recording_transcripts__recording_id__recordings__id');
 
   $$RecordingsTableProcessedTableManager get recordingId {
     final $_column = $_itemColumn<String>('recording_id')!;
@@ -8700,9 +8679,7 @@ final class $$TranscriptsTableReferences
   $$TranscriptsTableReferences(super.$_db, super.$_table, super.$_typedResult);
 
   static $MeetingsTable _meetingIdTable(_$AppDatabase db) =>
-      db.meetings.createAlias(
-        $_aliasNameGenerator(db.transcripts.meetingId, db.meetings.id),
-      );
+      db.meetings.createAlias('transcripts__meeting_id__meetings__id');
 
   $$MeetingsTableProcessedTableManager get meetingId {
     final $_column = $_itemColumn<String>('meeting_id')!;
@@ -9028,9 +9005,7 @@ final class $$MeetingReportsTableReferences
   );
 
   static $MeetingsTable _meetingIdTable(_$AppDatabase db) =>
-      db.meetings.createAlias(
-        $_aliasNameGenerator(db.meetingReports.meetingId, db.meetings.id),
-      );
+      db.meetings.createAlias('meeting_reports__meeting_id__meetings__id');
 
   $$MeetingsTableProcessedTableManager get meetingId {
     final $_column = $_itemColumn<String>('meeting_id')!;
@@ -9049,10 +9024,7 @@ final class $$MeetingReportsTableReferences
   static MultiTypedResultKey<$ReportProblemsTable, List<ProblemRow>>
   _reportProblemsRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
     db.reportProblems,
-    aliasName: $_aliasNameGenerator(
-      db.meetingReports.id,
-      db.reportProblems.reportId,
-    ),
+    aliasName: 'meeting_reports__id__report_problems__report_id',
   );
 
   $$ReportProblemsTableProcessedTableManager get reportProblemsRefs {
@@ -9070,10 +9042,7 @@ final class $$MeetingReportsTableReferences
   static MultiTypedResultKey<$ReportDecisionsTable, List<DecisionRow>>
   _reportDecisionsRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
     db.reportDecisions,
-    aliasName: $_aliasNameGenerator(
-      db.meetingReports.id,
-      db.reportDecisions.reportId,
-    ),
+    aliasName: 'meeting_reports__id__report_decisions__report_id',
   );
 
   $$ReportDecisionsTableProcessedTableManager get reportDecisionsRefs {
@@ -9094,10 +9063,7 @@ final class $$MeetingReportsTableReferences
   _reportActionItemsRefsTable(_$AppDatabase db) =>
       MultiTypedResultKey.fromTable(
         db.reportActionItems,
-        aliasName: $_aliasNameGenerator(
-          db.meetingReports.id,
-          db.reportActionItems.reportId,
-        ),
+        aliasName: 'meeting_reports__id__report_action_items__report_id',
       );
 
   $$ReportActionItemsTableProcessedTableManager get reportActionItemsRefs {
@@ -9676,10 +9642,9 @@ final class $$ReportProblemsTableReferences
     super.$_typedResult,
   );
 
-  static $MeetingReportsTable _reportIdTable(_$AppDatabase db) =>
-      db.meetingReports.createAlias(
-        $_aliasNameGenerator(db.reportProblems.reportId, db.meetingReports.id),
-      );
+  static $MeetingReportsTable _reportIdTable(_$AppDatabase db) => db
+      .meetingReports
+      .createAlias('report_problems__report_id__meeting_reports__id');
 
   $$MeetingReportsTableProcessedTableManager get reportId {
     final $_column = $_itemColumn<String>('report_id')!;
@@ -10004,10 +9969,9 @@ final class $$ReportDecisionsTableReferences
     super.$_typedResult,
   );
 
-  static $MeetingReportsTable _reportIdTable(_$AppDatabase db) =>
-      db.meetingReports.createAlias(
-        $_aliasNameGenerator(db.reportDecisions.reportId, db.meetingReports.id),
-      );
+  static $MeetingReportsTable _reportIdTable(_$AppDatabase db) => db
+      .meetingReports
+      .createAlias('report_decisions__report_id__meeting_reports__id');
 
   $$MeetingReportsTableProcessedTableManager get reportId {
     final $_column = $_itemColumn<String>('report_id')!;
@@ -10336,13 +10300,9 @@ final class $$ReportActionItemsTableReferences
     super.$_typedResult,
   );
 
-  static $MeetingReportsTable _reportIdTable(_$AppDatabase db) =>
-      db.meetingReports.createAlias(
-        $_aliasNameGenerator(
-          db.reportActionItems.reportId,
-          db.meetingReports.id,
-        ),
-      );
+  static $MeetingReportsTable _reportIdTable(_$AppDatabase db) => db
+      .meetingReports
+      .createAlias('report_action_items__report_id__meeting_reports__id');
 
   $$MeetingReportsTableProcessedTableManager get reportId {
     final $_column = $_itemColumn<String>('report_id')!;
@@ -10692,9 +10652,7 @@ final class $$MeetingMarkdownsTableReferences
   );
 
   static $MeetingsTable _meetingIdTable(_$AppDatabase db) =>
-      db.meetings.createAlias(
-        $_aliasNameGenerator(db.meetingMarkdowns.meetingId, db.meetings.id),
-      );
+      db.meetings.createAlias('meeting_markdowns__meeting_id__meetings__id');
 
   $$MeetingsTableProcessedTableManager get meetingId {
     final $_column = $_itemColumn<String>('meeting_id')!;
@@ -11305,9 +11263,7 @@ final class $$QaThreadsTableReferences
   $$QaThreadsTableReferences(super.$_db, super.$_table, super.$_typedResult);
 
   static $ProjectsTable _projectIdTable(_$AppDatabase db) =>
-      db.projects.createAlias(
-        $_aliasNameGenerator(db.qaThreads.projectId, db.projects.id),
-      );
+      db.projects.createAlias('qa_threads__project_id__projects__id');
 
   $$ProjectsTableProcessedTableManager get projectId {
     final $_column = $_itemColumn<String>('project_id')!;
@@ -11326,7 +11282,7 @@ final class $$QaThreadsTableReferences
   static MultiTypedResultKey<$QaMessagesTable, List<QaMessageRow>>
   _qaMessagesRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
     db.qaMessages,
-    aliasName: $_aliasNameGenerator(db.qaThreads.id, db.qaMessages.threadId),
+    aliasName: 'qa_threads__id__qa_messages__thread_id',
   );
 
   $$QaMessagesTableProcessedTableManager get qaMessagesRefs {
@@ -11699,9 +11655,7 @@ final class $$QaMessagesTableReferences
   $$QaMessagesTableReferences(super.$_db, super.$_table, super.$_typedResult);
 
   static $QaThreadsTable _threadIdTable(_$AppDatabase db) =>
-      db.qaThreads.createAlias(
-        $_aliasNameGenerator(db.qaMessages.threadId, db.qaThreads.id),
-      );
+      db.qaThreads.createAlias('qa_messages__thread_id__qa_threads__id');
 
   $$QaThreadsTableProcessedTableManager get threadId {
     final $_column = $_itemColumn<String>('thread_id')!;

@@ -10,7 +10,9 @@ import '../../domain/entities/transcript.dart';
 import '../../domain/entities/usage_record.dart';
 import 'core_providers.dart';
 
-/// Provider di sola lettura sui dati (stream reattivi da Drift).
+/// Provider di sola lettura sui dati (stream reattivi da Drift). I tipi dei
+/// provider family sono inferiti (in Riverpod 3 i tipi `*ProviderFamily` non
+/// sono più esposti pubblicamente).
 
 // ---------------- Progetti ----------------
 
@@ -22,42 +24,41 @@ final FutureProvider<Map<String, int>> meetingCountsProvider =
     FutureProvider<Map<String, int>>(
         (ref) => ref.watch(projectRepositoryProvider).meetingCounts());
 
-final FutureProviderFamily<Project?, String> projectProvider =
-    FutureProvider.family<Project?, String>(
-        (ref, String id) => ref.watch(projectRepositoryProvider).getProject(id));
+final projectProvider = FutureProvider.family<Project?, String>(
+    (ref, String id) => ref.watch(projectRepositoryProvider).getProject(id));
 
-final StreamProviderFamily<ProjectContext?, String> projectContextProvider =
+final projectContextProvider =
     StreamProvider.family<ProjectContext?, String>((ref, String projectId) =>
         ref.watch(projectRepositoryProvider).watchContext(projectId));
 
 // ---------------- Riunioni ----------------
 
-final StreamProviderFamily<List<Meeting>, String> projectMeetingsProvider =
+final projectMeetingsProvider =
     StreamProvider.family<List<Meeting>, String>((ref, String projectId) =>
         ref.watch(meetingRepositoryProvider).watchMeetingsForProject(projectId));
 
-final StreamProviderFamily<Meeting?, String> meetingProvider =
+final meetingProvider =
     StreamProvider.family<Meeting?, String>((ref, String meetingId) =>
         ref.watch(meetingRepositoryProvider).watchMeeting(meetingId));
 
-final StreamProviderFamily<List<Recording>, String> recordingsProvider =
+final recordingsProvider =
     StreamProvider.family<List<Recording>, String>((ref, String meetingId) =>
         ref.watch(meetingRepositoryProvider).watchRecordings(meetingId));
 
-final FutureProviderFamily<MeetingReport?, String> reportProvider =
+final reportProvider =
     FutureProvider.family<MeetingReport?, String>((ref, String meetingId) {
   // Si ricarica quando la riunione cambia stato.
   ref.watch(meetingProvider(meetingId));
   return ref.watch(meetingRepositoryProvider).getReport(meetingId);
 });
 
-final FutureProviderFamily<MeetingMarkdown?, String> markdownProvider =
+final markdownProvider =
     FutureProvider.family<MeetingMarkdown?, String>((ref, String meetingId) {
   ref.watch(meetingProvider(meetingId));
   return ref.watch(meetingRepositoryProvider).getMarkdown(meetingId);
 });
 
-final FutureProviderFamily<Transcript?, String> transcriptProvider =
+final transcriptProvider =
     FutureProvider.family<Transcript?, String>((ref, String meetingId) {
   ref.watch(meetingProvider(meetingId));
   return ref.watch(meetingRepositoryProvider).getTranscript(meetingId);
@@ -65,11 +66,11 @@ final FutureProviderFamily<Transcript?, String> transcriptProvider =
 
 // ---------------- Q&A ----------------
 
-final StreamProviderFamily<List<ProjectQAThread>, String> qaThreadsProvider =
+final qaThreadsProvider =
     StreamProvider.family<List<ProjectQAThread>, String>((ref, String projectId) =>
         ref.watch(qaRepositoryProvider).watchThreads(projectId));
 
-final StreamProviderFamily<List<ProjectQAMessage>, String> qaMessagesProvider =
+final qaMessagesProvider =
     StreamProvider.family<List<ProjectQAMessage>, String>((ref, String threadId) =>
         ref.watch(qaRepositoryProvider).watchMessages(threadId));
 

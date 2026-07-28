@@ -103,7 +103,7 @@ class _QaThreadScreenState extends ConsumerState<QaThreadScreen> {
 
     // Titolo del thread derivato dalla prima domanda (SRD §5).
     final List<ProjectQAMessage> existing =
-        ref.read(qaMessagesProvider(widget.threadId)).valueOrNull ?? const [];
+        ref.read(qaMessagesProvider(widget.threadId)).value ?? const [];
     if (existing.isEmpty) {
       final String title =
           question.length > 60 ? '${question.substring(0, 60)}…' : question;
@@ -185,7 +185,7 @@ class _Citations extends ConsumerWidget {
     final AppTokens t = context.tokens;
     final AsyncValue<List<Meeting>> meetings =
         ref.watch(projectMeetingsProvider(projectId));
-    final List<Meeting> all = meetings.valueOrNull ?? const [];
+    final List<Meeting> all = meetings.value ?? const [];
     final List<Meeting> cited =
         all.where((Meeting m) => meetingIds.contains(m.id)).toList();
     if (cited.isEmpty) return const SizedBox.shrink();

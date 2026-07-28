@@ -163,7 +163,9 @@ class _MeetingDetailBody extends ConsumerWidget {
           }
           return;
         }
-        await Share.share(md.contentMarkdown, subject: meeting.title);
+        await SharePlus.instance.share(
+          ShareParams(text: md.contentMarkdown, subject: meeting.title),
+        );
       case 'reanalyze':
         unawaited(
             ref.read(meetingProcessingProvider(meeting.id).notifier).process());
@@ -404,7 +406,7 @@ class _RegistrazioniTab extends ConsumerWidget {
   }
 
   Future<void> _addRecording(BuildContext context, WidgetRef ref) async {
-    final FilePickerResult? result = await FilePicker.platform.pickFiles(
+    final FilePickerResult? result = await FilePicker.pickFiles(
       type: FileType.audio,
       allowMultiple: true,
     );

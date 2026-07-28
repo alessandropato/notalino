@@ -74,7 +74,7 @@ class HomeScreen extends ConsumerWidget {
               ),
             );
           }
-          final Map<String, int> countMap = counts.valueOrNull ?? const {};
+          final Map<String, int> countMap = counts.value ?? const {};
           return ListView.separated(
             padding: const EdgeInsets.fromLTRB(
                 AppSpacing.lg, AppSpacing.md, AppSpacing.lg, 96),

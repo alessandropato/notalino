@@ -13,19 +13,19 @@ dependencies:
   cupertino_icons: ^1.0.8
 
   # State management (SRD §3): Riverpod scelto per composabilità, testabilità
-  # dei provider e assenza di boilerplate rispetto a Bloc.
-  flutter_riverpod: ^2.6.1
-  riverpod_annotation: ^2.6.1
+  # dei provider e assenza di boilerplate rispetto a Bloc. Provider scritti a
+  # mano (niente codegen), quindi non servono riverpod_annotation/generator.
+  flutter_riverpod: ^3.4.1
 
   # Database locale relazionale (SRD §3, §5): Drift (SQLite tipizzato) per le
   # relazioni progetti↔riunioni↔registrazioni.
-  drift: ^2.20.0
-  sqlite3_flutter_libs: ^0.5.24
+  drift: ^2.34.3
+  sqlite3_flutter_libs: ^0.6.0
   path_provider: ^2.1.4
   path: ^1.9.0
 
   # Storage sicuro chiavi (Keychain iOS / Keystore Android) — SRD §12.
-  flutter_secure_storage: ^9.2.2
+  flutter_secure_storage: ^10.3.1
 
   # Networking con retry/interceptor — SRD §3.
   dio: ^5.7.0
@@ -34,10 +34,14 @@ dependencies:
   receive_sharing_intent: ^1.8.1
 
   # Selezione file (aggiunta registrazioni manuale) — SRD §6bis.
-  file_picker: ^8.1.2
+  file_picker: ^11.0.2
 
   # Condivisione/export del verbale Markdown — SRD §6.4, §8ter.
-  share_plus: ^10.0.2
+  # 12.x è l'ultima linea con win32 ^5: da share_plus 13 serve win32 ^6, che è
+  # incompatibile con file_picker 11 (win32 ^5, il cui file Windows viene
+  # compilato dal frontend Dart anche su iOS via export condizionali).
+  # API SharePlus.instance/ShareParams già presente dalla 10.
+  share_plus: ^12.0.2
 
   # Elaborazione audio (split/decodifica per il chunking) — SRD §7.
   # ffmpeg_kit_flutter_new è il fork mantenuto (l'originale è stato ritirato).
@@ -46,7 +50,6 @@ dependencies:
 
   # Utilità
   uuid: ^4.5.1
-  intl: ^0.19.0
   flutter_markdown: ^0.7.4
   collection: ^1.18.0
   meta: ^1.15.0 # @immutable nelle entità di dominio (Dart puro, no Flutter)
@@ -56,9 +59,10 @@ dev_dependencies:
     sdk: flutter
 
   flutter_lints: ^6.0.0
-  drift_dev: ^2.20.0
+  # Vincoli-pavimento: pub sceglie le massime versioni compatibili con l'SDK
+  # Flutter (che pinna `meta`); evita conflitti con analyzer/meta.
+  drift_dev: ^2.34.0
   build_runner: ^2.4.13
-  riverpod_generator: ^2.6.1
 
 flutter:
   uses-material-design: true

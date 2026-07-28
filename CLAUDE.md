@@ -43,7 +43,7 @@ Una riunione = 1..N **registrazioni** (scelta utente) → ciascuna eventualmente
 
 | Ambito | Scelta | Motivazione |
 |---|---|---|
-| State management | **Riverpod** (`flutter_riverpod` + code-gen) | Provider componibili, testabili, poco boilerplate; override facile nei test. |
+| State management | **Riverpod 3** (`flutter_riverpod`, provider scritti a mano, **niente code-gen**) | Provider componibili, testabili, poco boilerplate; override facile nei test. Non si usa `riverpod_annotation/generator` (nessun `@riverpod`), così la toolchain analyzer non entra in conflitto con drift_dev. |
 | Database locale | **Drift** (SQLite tipizzato) | Query relazionali progetti↔riunioni↔registrazioni, migrazioni, type-safety. |
 | Storage chiavi | **flutter_secure_storage** | Keychain iOS / Keystore Android. API key mai in DB/log/prefs. |
 | Networking | **dio** | Interceptor per retry/backoff e mappatura errori tipizzata. |
@@ -196,7 +196,10 @@ Legenda: ✅ fatto · 🚧 in corso · ⬜ da fare
 ---
 
 ## 11. Problemi noti / TODO / decisioni rimandate
-- **Build verificata**: `flutter build ios --no-codesign` (device) → ✅ `Runner.app` 48.5 MB; `flutter build ios --simulator` → ✅ `Runner.app` (simulatore Apple Silicon). `flutter analyze` 0 issue, `flutter test` 21 verdi.
+- **Build verificata** (dipendenze aggiornate): `flutter build ios --simulator` → ✅ `Runner.app` (simulatore Apple Silicon); device → ✅ (validata su versione precedente). `flutter analyze` 0 issue, `flutter test` 21 verdi.
+- **Dipendenze aggiornate all'ultimo compatibile** (Flutter 3.44.6 / Dart 3.12.2): flutter_riverpod **3.4.1**, drift **2.34.3**, flutter_secure_storage **10.3.1**, file_picker **11.0.2**, share_plus **12.0.2**, sqlite3_flutter_libs **0.6.0**, ffmpeg_kit_flutter_new **4.5.3**, dio 5.11, uuid 4.6. Rimosso `intl` (inutilizzato).
+- **Vincolo share_plus/file_picker/win32**: file_picker 11 usa `win32 ^5`, share_plus **13** usa `win32 ^6` → incompatibili (il file Windows di file_picker viene compilato dal frontend Dart anche su iOS via export condizionali). Scelto **share_plus 12.0.2** (ultima linea con win32 ^5). Salire a file_picker 12 (win32 ^6) è possibile solo quando esce stabile (ora beta).
+- **Migrazioni major applicate**: Riverpod 2→3 (provider family senza tipi `*ProviderFamily` espliciti; family notifier con arg da costruttore); secure_storage 9→10 (rimosso `encryptedSharedPreferences` deprecato); share_plus → `SharePlus.instance.share(ShareParams(...))`; file_picker → `FilePicker.pickFiles(...)` statico; sqlite3_flutter_libs 0.6 (rimosso `applyWorkaroundToOpenSqlite3OnOldAndroidVersions`); `AsyncValue.valueOrNull` → `.value`.
 - **ffmpeg su simulatore — RISOLTO**: la 1.6.1 distribuiva un `.framework` "fat" senza slice arm64-simulatore (il link sul simulatore Apple Silicon falliva). Aggiornato a **`ffmpeg_kit_flutter_new: ^4.5.3`**, che distribuisce **XCFramework** con slice device + simulatore (arm64/x86_64) e supporta SPM. L'API Dart (`FFmpegKit.execute`, `getReturnCode`, `ReturnCode.isSuccess`, `FFprobeKit.getMediaInformation`, `getDuration`) è invariata → `FfmpegAudioProcessor` non ha richiesto modifiche. Build simulatore e device entrambe OK.
 - **Minimi di piattaforma** (imposti da `ffmpeg_kit_flutter_new`): Android `minSdk 24`, iOS deployment target `14.0`. Già configurati in `android/app/build.gradle.kts`, `ios/Podfile` e `project.pbxproj`.
 - iOS Share Extension + App Group entitlement da creare in Xcode (vedi §6). Import via file picker funziona nel frattempo.

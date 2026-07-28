@@ -27,12 +27,18 @@ class ProcessingState {
 
 /// Orchestrazione trascrizione → analisi con avanzamento (SRD §6.2, §6.3).
 /// Non blocca la UI: si può navigare altrove mentre elabora (SRD §10).
-class MeetingProcessingController extends FamilyNotifier<ProcessingState, String> {
+///
+/// È un notifier family (chiave = meetingId, ricevuto dal costruttore) per
+/// tenere stati di elaborazione distinti per riunione.
+class MeetingProcessingController extends Notifier<ProcessingState> {
+  MeetingProcessingController(this.meetingId);
+
+  final String meetingId;
+
   @override
-  ProcessingState build(String meetingId) => const ProcessingState();
+  ProcessingState build() => const ProcessingState();
 
   Future<void> process() async {
-    final String meetingId = arg;
     try {
       state = const ProcessingState(
         phase: ProcessingPhase.transcribing,
@@ -75,7 +81,7 @@ class MeetingProcessingController extends FamilyNotifier<ProcessingState, String
         phase: ProcessingPhase.analyzing,
         label: 'Rigenerazione del verbale…',
       );
-      await ref.read(analyzeMeetingProvider).call(arg);
+      await ref.read(analyzeMeetingProvider).call(meetingId);
       state = const ProcessingState(phase: ProcessingPhase.done);
     } on Object catch (e) {
       state = ProcessingState(
@@ -90,7 +96,7 @@ class MeetingProcessingController extends FamilyNotifier<ProcessingState, String
   String _humanError(Object e) => e.toString().replaceFirst('Exception: ', '');
 }
 
-final NotifierProviderFamily<MeetingProcessingController, ProcessingState, String>
-    meetingProcessingProvider =
-    NotifierProvider.family<MeetingProcessingController, ProcessingState, String>(
-        MeetingProcessingController.new);
+final meetingProcessingProvider = NotifierProvider.family<
+    MeetingProcessingController, ProcessingState, String>(
+  MeetingProcessingController.new,
+);

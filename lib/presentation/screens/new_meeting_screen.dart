@@ -68,7 +68,7 @@ class _NewMeetingScreenState extends ConsumerState<NewMeetingScreen> {
     final AsyncValue<List<Project>> projects = ref.watch(projectsProvider);
     final AsyncValue<SettingsState> settings =
         ref.watch(settingsControllerProvider);
-    final bool hasApiKey = settings.valueOrNull?.hasApiKey ?? false;
+    final bool hasApiKey = settings.value?.hasApiKey ?? false;
 
     return AppScaffold(
       appBar: AppBar(title: const Text('Nuova riunione')),
@@ -195,7 +195,7 @@ class _NewMeetingScreenState extends ConsumerState<NewMeetingScreen> {
   }
 
   Future<void> _pickFiles() async {
-    final FilePickerResult? result = await FilePicker.platform.pickFiles(
+    final FilePickerResult? result = await FilePicker.pickFiles(
       type: FileType.audio,
       allowMultiple: true,
     );

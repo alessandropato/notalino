@@ -31,7 +31,7 @@ class ProjectDetailScreen extends ConsumerWidget {
       length: 3,
       child: AppScaffold(
         appBar: AppBar(
-          title: Text(project.valueOrNull?.name ?? 'Progetto',
+          title: Text(project.value?.name ?? 'Progetto',
               overflow: TextOverflow.ellipsis),
           bottom: const TabBar(
             tabs: [
@@ -80,16 +80,16 @@ class _ContextTab extends ConsumerWidget {
                 trailing: GhostButton(
                   label: 'Modifica',
                   icon: Icons.edit_outlined,
-                  onPressed: () => _editDescription(context, ref, project.valueOrNull),
+                  onPressed: () => _editDescription(context, ref, project.value),
                 ),
               ),
               const SizedBox(height: AppSpacing.sm),
               Text(
-                (project.valueOrNull?.description.trim().isNotEmpty ?? false)
+                (project.value?.description.trim().isNotEmpty ?? false)
                     ? project.value!.description
                     : 'Aggiungi una descrizione del progetto: verrà usata dall\'AI come intento.',
                 style: AppTypography.bodyMedium.copyWith(
-                  color: (project.valueOrNull?.description.trim().isNotEmpty ??
+                  color: (project.value?.description.trim().isNotEmpty ??
                           false)
                       ? t.colors.textSecondary
                       : t.colors.textTertiary,

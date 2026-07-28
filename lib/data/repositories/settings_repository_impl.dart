@@ -11,10 +11,7 @@ import '../../domain/repositories/settings_repository.dart';
 /// stanno anch'esse nel secure storage per non introdurre un secondo store.
 class SecureSettingsRepository implements SettingsRepository {
   SecureSettingsRepository({FlutterSecureStorage? storage, Dio? dio})
-      : _storage = storage ??
-            const FlutterSecureStorage(
-              aOptions: AndroidOptions(encryptedSharedPreferences: true),
-            ),
+      : _storage = storage ?? const FlutterSecureStorage(),
         _dio = dio ?? Dio();
 
   final FlutterSecureStorage _storage;
