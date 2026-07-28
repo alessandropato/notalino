@@ -75,6 +75,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     hint: 'sk-…',
                     obscure: true,
                     prefixIcon: Icons.key_outlined,
+                    // Ricostruisce per aggiornare lo stato abilitato dei bottoni
+                    // mentre l'utente digita/incolla la chiave.
+                    onChanged: (_) => setState(() => _testResult = null),
                   ),
                   if (_testResult != null) ...[
                     const SizedBox(height: AppSpacing.sm),

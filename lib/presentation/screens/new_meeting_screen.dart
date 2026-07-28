@@ -166,6 +166,8 @@ class _NewMeetingScreenState extends ConsumerState<NewMeetingScreen> {
                             child: AppTextField(
                               controller: _newProjectCtrl,
                               hint: 'Nome del nuovo progetto',
+                              // Riabilita il bottone "Crea" mentre si digita.
+                              onChanged: (_) => setState(() {}),
                             ),
                           ),
                       ],
