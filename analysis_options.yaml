@@ -10,13 +10,16 @@ analyzer:
 
 linter:
   rules:
-    - always_declare_return_types
-    - avoid_dynamic_calls
-    - prefer_final_locals
-    - prefer_const_constructors
-    - prefer_const_declarations
-    - unnecessary_await_in_return
-    - use_super_parameters
-    - directives_ordering
-    - sort_child_properties_last
-    - unawaited_futures
+    always_declare_return_types: true
+    avoid_dynamic_calls: true
+    prefer_final_locals: true
+    prefer_const_constructors: true
+    prefer_const_declarations: true
+    unnecessary_await_in_return: true
+    use_super_parameters: true
+    directives_ordering: true
+    sort_child_properties_last: true
+    unawaited_futures: true
+    # I servizi/use case usano campi privati + parametri named per la DI: il
+    # pattern è intenzionale e non è esprimibile con initializing formals.
+    prefer_initializing_formals: false

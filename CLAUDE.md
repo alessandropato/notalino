@@ -175,21 +175,23 @@ Stato Meeting aggregato dagli stati Recording. Modifica registrazioni dopo l'ana
 Legenda: ✅ fatto · 🚧 in corso · ⬜ da fare
 
 - ✅ **Fase 1 — Setup**: progetto `notalino`, identità `it.maketron.notalino`, iOS+Android config, lint, struttura cartelle, CLAUDE.md.
-- 🚧 **Fase 2 — Design system**: token + ThemeExtension (light/dark) + libreria componenti glass.
-- ⬜ **Fase 3 — Dominio + DB Drift**.
-- ⬜ **Fase 4 — Impostazioni + API key** (secure storage, test connessione).
-- ⬜ **Fase 5 — Import** (share sheet / file picker).
-- ⬜ **Fase 6 — Trascrizione semplice** (Whisper, file < 25MB).
-- ⬜ **Fase 7 — Registrazioni multiple**.
-- ⬜ **Fase 8 — Chunking audio** (ffmpeg).
-- ⬜ **Fase 9 — Analisi AI** + MeetingMarkdown.
-- ⬜ **Fase 10 — Contesto progetto**.
-- ⬜ **Fase 11 — Q&A**.
-- ⬜ **Fase 12 — UI verbale/trascrizione/contesto**.
-- ⬜ **Fase 13 — Progetti CRUD**.
-- ⬜ **Fase 14 — Tracker costi**.
-- ⬜ **Fase 15 — Rifinitura estetica**.
-- ⬜ **Fase 16 — Verifica Android + test end-to-end**.
+- ✅ **Fase 2 — Design system**: token (`AppColors`/`AppDimens`/`AppTypography`/`AppGlass`) + `AppTokens` ThemeExtension (light/dark) + libreria componenti glass (`GlassContainer`, `GlassCard`, bottoni, `AppTextField`, `StatusBadge`, `SectionHeader`, `EmptyState`, `StepProgressIndicator`, `AppBottomSheet`, `AppDialog`, `AppScaffold`).
+- ✅ **Fase 3 — Dominio + DB Drift**: entità, interfacce repository/servizi, DB Drift con 14 tabelle + tabelle figlie report, repository impl.
+- ✅ **Fase 4 — Impostazioni + API key**: `SecureSettingsRepository` (Keychain), test connessione, scelta modello, tariffe editabili; `SettingsScreen`.
+- ✅ **Fase 5 — Import**: `ImportRecordings` + `FileStorage` (copia persistente), file picker in-app, `ShareImportListener` per la share sheet, `NewMeetingScreen`.
+- ✅ **Fase 6 — Trascrizione**: `WhisperTranscriptionService`, `TranscribeMeeting` (per Recording → aggregato), UsageRecord.
+- ✅ **Fase 7 — Registrazioni multiple**: N Recording per Meeting, riordino drag&drop, aggiunta/rimozione, riuso trascrizioni, invalidazione verbale.
+- ✅ **Fase 8 — Chunking audio**: `FfmpegAudioProcessor` (normalizza mono/16kHz/AAC + segmenta per durata), avanzamento "blocco N di M".
+- ✅ **Fase 9 — Analisi AI**: `OpenAiAnalysisService` (JSON mode + parsing tollerante + retry), `AnalyzeMeeting`, `GenerateMeetingMarkdown` (§8ter.1).
+- ✅ **Fase 10 — Contesto progetto**: `UpdateProjectContext` (§8ter.2), aggiornato al completamento riunione.
+- ✅ **Fase 11 — Q&A**: `DefaultKnowledgeRetriever` (tutti i recap / keyword), `AskProject`, thread persistenti, `QaThreadScreen` (chat).
+- ✅ **Fase 12 — UI verbale/trascrizione/contesto**: `MeetingDetailScreen` (tab Verbale/Trascrizione/Registrazioni + banner), `ProjectDetailScreen` (Contesto/Riunioni/Chiedi).
+- ✅ **Fase 13 — Progetti CRUD**: creazione, descrizione editabile, conteggio riunioni; spostamento riunione predisposto (`Meeting.copyWith(projectId:)`).
+- ✅ **Fase 14 — Tracker costi**: `UsageRecord` per ogni operazione, `UsageScreen` (mese/totale/breakdown).
+- 🚧 **Fase 15 — Rifinitura estetica**: base glass completa; micro-interazioni/transizioni da affinare.
+- ⬜ **Fase 16 — Verifica Android + test end-to-end**: unit test presenti (costi, parsing JSON, markdown); build su device iOS/Android e percorso critico ancora da verificare.
+
+**Test presenti**: `test/cost_estimator_test.dart`, `test/json_extractor_test.dart`, `test/markdown_templates_test.dart` (15 test, verdi). `flutter analyze`: 0 issue.
 
 ---
 
