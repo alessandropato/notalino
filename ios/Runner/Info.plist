@@ -9,6 +9,15 @@
 	     ogni upload. -->
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
+	<!-- Purpose string richieste da Apple (ITMS-90683): il selettore file
+	     (file_picker) referenzia le API foto/fotocamera anche se Notalino
+	     seleziona solo file audio. Testo onesto sull'uso effettivo. -->
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Notalino accede ai file del dispositivo solo per farti selezionare le registrazioni audio delle riunioni.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Notalino non usa la fotocamera: l'autorizzazione è richiesta da un componente del selettore file, ma non viene utilizzata.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Notalino non usa la tua posizione.</string>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
