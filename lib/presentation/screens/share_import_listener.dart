@@ -30,16 +30,24 @@ class _ShareImportListenerState extends ConsumerState<ShareImportListener> {
     super.initState();
     final ShareIntentService service = ref.read(shareIntentServiceProvider);
 
-    // File ricevuti mentre l'app è in foreground/background.
-    _sub = service.sharedFilesStream().listen(_handle);
+    // File ricevuti mentre l'app è in foreground/background. onError difensivo:
+    // su iOS senza Share Extension configurata non deve mai far crashare l'app.
+    _sub = service.sharedFilesStream().listen(
+      _handle,
+      onError: (Object _) {},
+    );
 
     // File ricevuti all'avvio (app chiusa).
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-      final List<SharedAudioFile> initial =
-          await service.getInitialSharedFiles();
-      if (initial.isNotEmpty) {
-        _handle(initial);
-        service.reset();
+      try {
+        final List<SharedAudioFile> initial =
+            await service.getInitialSharedFiles();
+        if (initial.isNotEmpty) {
+          _handle(initial);
+          service.reset();
+        }
+      } on Object {
+        // Nessun canale di share disponibile: ignora, import via file picker.
       }
     });
   }
