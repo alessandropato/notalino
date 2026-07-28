@@ -25,4 +25,13 @@ abstract final class AudioConstants {
   /// Separatore leggibile tra le trascrizioni delle registrazioni nel testo
   /// aggregato (SRD §5, nota su `fullText`).
   static String recordingSeparator(int order) => '\n\n--- Registrazione $order ---\n\n';
+
+  /// Estensioni audio importabili dal file picker (senza punto). Si usa
+  /// `FileType.custom` con queste estensioni perché su iOS `FileType.audio`
+  /// limita alla libreria musicale (esclude i Memo Vocali e i file in File).
+  /// Set volutamente conservativo verso UTI iOS note per non far fallire il
+  /// picker; i Memo Vocali dell'iPhone esportano `.m4a`.
+  static const List<String> importableExtensions = <String>[
+    'm4a', 'mp3', 'wav', 'aac', 'aiff', 'aif', 'caf', 'mp4', 'm4v', 'mov',
+  ];
 }

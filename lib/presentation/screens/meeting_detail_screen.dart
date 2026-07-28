@@ -9,6 +9,7 @@ import 'package:share_plus/share_plus.dart';
 import '../../app/theme/app_dimens.dart';
 import '../../app/theme/app_tokens.dart';
 import '../../app/theme/app_typography.dart';
+import '../../core/constants/audio_constants.dart';
 import '../../core/utils/formatters.dart';
 import '../../domain/entities/meeting.dart';
 import '../../domain/entities/meeting_markdown.dart';
@@ -407,7 +408,8 @@ class _RegistrazioniTab extends ConsumerWidget {
 
   Future<void> _addRecording(BuildContext context, WidgetRef ref) async {
     final FilePickerResult? result = await FilePicker.pickFiles(
-      type: FileType.audio,
+      type: FileType.custom,
+      allowedExtensions: AudioConstants.importableExtensions,
       allowMultiple: true,
     );
     if (result == null) return;

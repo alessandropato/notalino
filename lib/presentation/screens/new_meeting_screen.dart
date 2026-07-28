@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../app/theme/app_dimens.dart';
 import '../../app/theme/app_tokens.dart';
 import '../../app/theme/app_typography.dart';
+import '../../core/constants/audio_constants.dart';
 import '../../core/utils/formatters.dart';
 import '../../domain/entities/meeting.dart';
 import '../../domain/entities/project.dart';
@@ -198,7 +199,8 @@ class _NewMeetingScreenState extends ConsumerState<NewMeetingScreen> {
 
   Future<void> _pickFiles() async {
     final FilePickerResult? result = await FilePicker.pickFiles(
-      type: FileType.audio,
+      type: FileType.custom,
+      allowedExtensions: AudioConstants.importableExtensions,
       allowMultiple: true,
     );
     if (result == null) return;
