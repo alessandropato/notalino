@@ -73,16 +73,36 @@ if [[ -z "$IPA" ]]; then
 fi
 echo "▶ IPA: $IPA"
 
-# --- upload su TestFlight ---
-echo "▶ Upload su App Store Connect / TestFlight…"
-if [[ -n "${ASC_KEY_ID:-}" && -n "${ASC_ISSUER_ID:-}" ]]; then
-  xcrun altool --upload-app -f "$IPA" --type ios \
-    --apiKey "$ASC_KEY_ID" --apiIssuer "$ASC_ISSUER_ID"
-elif [[ -n "${APPLE_ID:-}" && -n "${APPLE_APP_PASSWORD:-}" ]]; then
-  xcrun altool --upload-app -f "$IPA" --type ios \
-    --username "$APPLE_ID" --password "$APPLE_APP_PASSWORD"
-else
+# --- upload su TestFlight (con retry: altool ogni tanto fallisce con
+#     "Error: (null) 'Defaults.properties'..." in modo transitorio) ---
+if [[ -z "${ASC_KEY_ID:-}" && -z "${APPLE_ID:-}" ]]; then
   echo "✗ Credenziali mancanti. Imposta ASC_KEY_ID+ASC_ISSUER_ID oppure APPLE_ID+APPLE_APP_PASSWORD." >&2
+  exit 1
+fi
+
+do_upload() {
+  if [[ -n "${ASC_KEY_ID:-}" && -n "${ASC_ISSUER_ID:-}" ]]; then
+    xcrun altool --upload-app -f "$IPA" --type ios \
+      --apiKey "$ASC_KEY_ID" --apiIssuer "$ASC_ISSUER_ID"
+  else
+    xcrun altool --upload-app -f "$IPA" --type ios \
+      --username "$APPLE_ID" --password "$APPLE_APP_PASSWORD"
+  fi
+}
+
+uploaded=false
+for attempt in 1 2 3; do
+  echo "▶ Upload su TestFlight (tentativo $attempt/3)…"
+  if do_upload; then
+    uploaded=true
+    break
+  fi
+  echo "… tentativo $attempt fallito (spesso è un flake di altool), ritento tra 10s…"
+  sleep 10
+done
+
+if [[ "$uploaded" != true ]]; then
+  echo "✗ Upload fallito dopo 3 tentativi. L'IPA è pronto in $IPA: puoi ricaricarlo con Transporter." >&2
   exit 1
 fi
 
