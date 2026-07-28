@@ -58,7 +58,15 @@ class _NewMeetingScreenState extends ConsumerState<NewMeetingScreen> {
     super.initState();
     _files.addAll(widget.initialFilePaths);
     _projectChoice = widget.presetProjectId;
-    _titleCtrl.text = 'Riunione ${Formatters.date(DateTime.now())}';
+    // Titolo suggerito = nome del primo file caricato (senza estensione).
+    if (_files.isNotEmpty) _titleCtrl.text = _titleFromPath(_files.first);
+  }
+
+  /// Nome file senza cartella né estensione, per suggerire il titolo.
+  String _titleFromPath(String path) {
+    final String base = path.split('/').last;
+    final int dot = base.lastIndexOf('.');
+    return dot > 0 ? base.substring(0, dot) : base;
   }
 
   @override
@@ -91,18 +99,8 @@ class _NewMeetingScreenState extends ConsumerState<NewMeetingScreen> {
               ),
             ),
 
-          // --- Sorgente: audio / testo ---
-          SegmentedToggle<_ImportMode>(
-            value: _mode,
-            segments: const [
-              ToggleSegment(value: _ImportMode.audio, label: 'Audio', icon: Icons.graphic_eq),
-              ToggleSegment(value: _ImportMode.text, label: 'Testo', icon: Icons.notes),
-            ],
-            onChanged: (m) => setState(() => _mode = m),
-          ),
-          const SizedBox(height: AppSpacing.lg),
-
-          if (_mode == _ImportMode.audio) _audioCard(t) else _textCard(t),
+          // --- Progetto (in alto) ---
+          _projectCard(t, projects),
           const SizedBox(height: AppSpacing.lg),
 
           // --- Titolo ---
@@ -120,26 +118,29 @@ class _NewMeetingScreenState extends ConsumerState<NewMeetingScreen> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 const SectionHeader(title: 'Contesto', eyebrow: 'Facoltativo'),
-                const SizedBox(height: AppSpacing.sm),
-                Text(
-                  'Aiuta l\'AI a contestualizzare il verbale: partecipanti, scopo, collegamenti a riunioni precedenti.',
-                  style: AppTypography.caption
-                      .copyWith(color: t.colors.textTertiary),
-                ),
                 const SizedBox(height: AppSpacing.md),
                 AppTextField(
                   controller: _contextCtrl,
                   maxLines: 4,
-                  hint:
-                      'Es. Riunione di recap interna a seguito di quella della scorsa settimana; presenti io, Marco e Paolo.',
+                  hint: 'Partecipanti, scopo, collegamenti a riunioni precedenti…',
                 ),
               ],
             ),
           ),
           const SizedBox(height: AppSpacing.lg),
 
-          // --- Progetto ---
-          _projectCard(t, projects),
+          // --- Sorgente: audio / testo ---
+          SegmentedToggle<_ImportMode>(
+            value: _mode,
+            segments: const [
+              ToggleSegment(value: _ImportMode.audio, label: 'Audio', icon: Icons.graphic_eq),
+              ToggleSegment(value: _ImportMode.text, label: 'Testo', icon: Icons.notes),
+            ],
+            onChanged: (m) => setState(() => _mode = m),
+          ),
+          const SizedBox(height: AppSpacing.lg),
+
+          if (_mode == _ImportMode.audio) _audioCard(t) else _textCard(t),
           const SizedBox(height: AppSpacing.xl),
 
           PrimaryButton(
@@ -275,6 +276,10 @@ class _NewMeetingScreenState extends ConsumerState<NewMeetingScreen> {
     setState(() {
       _files.addAll(
           result.files.map((PlatformFile f) => f.path).whereType<String>());
+      // Suggerisci il titolo dal nome file se non è ancora stato impostato.
+      if (_titleCtrl.text.trim().isEmpty && _files.isNotEmpty) {
+        _titleCtrl.text = _titleFromPath(_files.first);
+      }
     });
   }
 

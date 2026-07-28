@@ -7,6 +7,7 @@ import '../../app/theme/app_tokens.dart';
 import '../../app/theme/app_typography.dart';
 import '../../core/utils/formatters.dart';
 import '../../domain/entities/meeting.dart';
+import '../../domain/entities/meeting_status.dart';
 import '../../domain/entities/project.dart';
 import '../../domain/entities/qa.dart';
 import '../providers/core_providers.dart';
@@ -15,7 +16,6 @@ import '../utils/status_ui.dart';
 import '../widgets/widgets.dart';
 import 'meeting_detail_screen.dart';
 import 'new_meeting_screen.dart';
-import 'qa_thread_screen.dart';
 
 /// Dettaglio progetto (SRD §6ter, §10 schermata 2): apre sul contesto.
 /// Navigazione a due sezioni (Contesto, Riunioni) con barra in basso; il Q&A
@@ -155,23 +155,20 @@ class _ContextTab extends ConsumerWidget {
           AppSpacing.lg, AppSpacing.md, AppSpacing.lg, 160),
       children: [
         GlassCard(
+          onTap: () => _editDescription(context, ref, project.value),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               SectionHeader(
                 title: 'Contesto',
-                trailing: GhostButton(
-                  label: 'Modifica',
-                  icon: Icons.edit_outlined,
-                  onPressed: () =>
-                      _editDescription(context, ref, project.value),
-                ),
+                trailing: Icon(Icons.edit_outlined,
+                    size: 18, color: t.colors.accentPrimary),
               ),
               const SizedBox(height: AppSpacing.sm),
               Text(
                 (project.value?.description.trim().isNotEmpty ?? false)
                     ? project.value!.description
-                    : 'Aggiungi il contesto del progetto.',
+                    : 'Tocca per aggiungere informazioni sul progetto.',
                 style: AppTypography.bodyMedium.copyWith(
                   color: (project.value?.description.trim().isNotEmpty ?? false)
                       ? t.colors.textSecondary
@@ -341,26 +338,60 @@ class _MeetingCard extends StatelessWidget {
 
 // ------------------- Q&A (popup) -------------------
 
-/// Contenuto del popup "Chiedi al progetto": nuova domanda + cronologia.
-class _QaHub extends ConsumerWidget {
+
+/// Popup "Chiedi al progetto": la chat si apre direttamente qui dentro, senza
+/// navigare a un'altra schermata. Usa un'unica conversazione per progetto
+/// (l'ultima o una nuova), così è immediato.
+class _QaHub extends ConsumerStatefulWidget {
   const _QaHub({required this.projectId});
   final String projectId;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<_QaHub> createState() => _QaHubState();
+}
+
+class _QaHubState extends ConsumerState<_QaHub> {
+  final TextEditingController _ctrl = TextEditingController();
+  String? _threadId;
+  bool _sending = false;
+  String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    // Riusa l'ultima conversazione del progetto, se esiste.
+    Future<void>(() async {
+      final List<ProjectQAThread> threads =
+          await ref.read(qaRepositoryProvider).getThreads(widget.projectId);
+      if (mounted && threads.isNotEmpty) {
+        setState(() => _threadId = threads.first.id);
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final AppTokens t = context.tokens;
-    final AsyncValue<List<ProjectQAThread>> threads =
-        ref.watch(qaThreadsProvider(projectId));
+    final AsyncValue<List<ProjectQAMessage>>? messages = _threadId == null
+        ? null
+        : ref.watch(qaMessagesProvider(_threadId!));
 
     return DraggableScrollableSheet(
-      initialChildSize: 0.7,
+      initialChildSize: 0.75,
       minChildSize: 0.4,
       maxChildSize: 0.95,
       expand: false,
       builder: (BuildContext context, ScrollController scroll) => GlassContainer(
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(AppRadii.xl)),
+        borderRadius:
+            const BorderRadius.vertical(top: Radius.circular(AppRadii.xl)),
         padding: const EdgeInsets.fromLTRB(
-            AppSpacing.xl, AppSpacing.md, AppSpacing.xl, AppSpacing.lg),
+            AppSpacing.lg, AppSpacing.md, AppSpacing.lg, AppSpacing.md),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -368,104 +399,205 @@ class _QaHub extends ConsumerWidget {
               child: Container(
                 width: 40,
                 height: 4,
-                margin: const EdgeInsets.only(bottom: AppSpacing.lg),
+                margin: const EdgeInsets.only(bottom: AppSpacing.md),
                 decoration: BoxDecoration(
                   color: t.colors.textTertiary.withValues(alpha: 0.4),
                   borderRadius: AppRadii.rPill,
                 ),
               ),
             ),
-            const SectionHeader(
-                title: 'Chiedi al progetto', eyebrow: 'Second brain'),
-            const SizedBox(height: AppSpacing.md),
-            PrimaryButton(
-              label: 'Nuova domanda',
-              icon: Icons.add_comment_outlined,
-              onPressed: () => _newThread(context, ref),
+            Row(
+              children: [
+                Icon(Icons.chat_bubble_rounded,
+                    size: 20, color: t.colors.accentPrimary),
+                const SizedBox(width: AppSpacing.sm),
+                Expanded(
+                  child: Text('Chiedi al progetto',
+                      style: AppTypography.titleMedium
+                          .copyWith(color: t.colors.textPrimary)),
+                ),
+                if (_threadId != null)
+                  IconButton(
+                    tooltip: 'Nuova conversazione',
+                    icon: Icon(Icons.add_comment_outlined,
+                        color: t.colors.textSecondary),
+                    onPressed: () => setState(() {
+                      _threadId = null;
+                      _error = null;
+                    }),
+                  ),
+              ],
             ),
-            const SizedBox(height: AppSpacing.lg),
+            const SizedBox(height: AppSpacing.sm),
             Expanded(
-              child: threads.when(
-                loading: () =>
-                    const Center(child: CircularProgressIndicator()),
-                error: (Object e, _) => Center(child: Text('Errore: $e')),
-                data: (List<ProjectQAThread> list) {
-                  if (list.isEmpty) {
-                    return Center(
-                      child: Text(
-                        'Nessuna domanda ancora. Le risposte si basano sui recap delle riunioni.',
-                        textAlign: TextAlign.center,
-                        style: AppTypography.bodyMedium
-                            .copyWith(color: t.colors.textTertiary),
-                      ),
-                    );
-                  }
-                  return ListView.separated(
-                    controller: scroll,
-                    itemCount: list.length,
-                    separatorBuilder: (_, _) =>
-                        const SizedBox(height: AppSpacing.sm),
-                    itemBuilder: (BuildContext context, int i) {
-                      final ProjectQAThread thread = list[i];
-                      return GlassCard(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: AppSpacing.lg, vertical: AppSpacing.md),
-                        onTap: () => _openThread(context, thread),
-                        child: Row(
+              child: (messages == null)
+                  ? _emptyPrompt(t)
+                  : messages.when(
+                      loading: () =>
+                          const Center(child: CircularProgressIndicator()),
+                      error: (Object e, _) => Center(child: Text('Errore: $e')),
+                      data: (List<ProjectQAMessage> list) {
+                        if (list.isEmpty && !_sending) return _emptyPrompt(t);
+                        return ListView(
+                          controller: scroll,
                           children: [
-                            Icon(Icons.chat_bubble_outline,
-                                size: 18, color: t.colors.accentPrimary),
-                            const SizedBox(width: AppSpacing.md),
-                            Expanded(
-                              child: Text(thread.title,
-                                  maxLines: 2,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: AppTypography.bodyLarge
-                                      .copyWith(color: t.colors.textPrimary)),
-                            ),
-                            Icon(Icons.chevron_right,
-                                color: t.colors.textTertiary),
+                            for (final ProjectQAMessage m in list)
+                              _bubble(t, m),
+                            if (_sending) _typing(t),
                           ],
-                        ),
-                      );
-                    },
-                  );
-                },
-              ),
+                        );
+                      },
+                    ),
             ),
+            if (_error != null)
+              Padding(
+                padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+                child: Text(_error!,
+                    style:
+                        AppTypography.caption.copyWith(color: t.colors.error)),
+              ),
+            _composer(t),
           ],
         ),
       ),
     );
   }
 
-  Future<void> _newThread(BuildContext context, WidgetRef ref) async {
-    final ProjectQAThread thread = await ref
-        .read(qaRepositoryProvider)
-        .createThread(projectId: projectId, title: 'Nuova domanda');
-    if (!context.mounted) return;
-    Navigator.of(context).pop(); // chiude il popup
-    await Navigator.of(context).push(
-      MaterialPageRoute<void>(
-        builder: (_) => QaThreadScreen(
-          projectId: projectId,
-          threadId: thread.id,
-          title: thread.title,
+  Widget _emptyPrompt(AppTokens t) => Center(
+        child: Padding(
+          padding: const EdgeInsets.all(AppSpacing.lg),
+          child: Text(
+            'Fai una domanda sul progetto.\nEs. "Cosa avevamo deciso sul budget?"',
+            textAlign: TextAlign.center,
+            style: AppTypography.bodyMedium.copyWith(color: t.colors.textTertiary),
+          ),
         ),
+      );
+
+  Widget _bubble(AppTokens t, ProjectQAMessage m) {
+    final bool isUser = m.role == QaRole.user;
+    return Align(
+      alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
+      child: Container(
+        constraints:
+            BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.78),
+        margin: const EdgeInsets.only(bottom: AppSpacing.md),
+        padding: const EdgeInsets.all(AppSpacing.md),
+        decoration: BoxDecoration(
+          gradient: isUser ? t.colors.accentGradient : null,
+          color: isUser ? null : t.colors.surface.withValues(alpha: 0.6),
+          borderRadius: BorderRadius.only(
+            topLeft: const Radius.circular(AppRadii.lg),
+            topRight: const Radius.circular(AppRadii.lg),
+            bottomLeft: Radius.circular(isUser ? AppRadii.lg : AppRadii.sm),
+            bottomRight: Radius.circular(isUser ? AppRadii.sm : AppRadii.lg),
+          ),
+          border: isUser ? null : Border.all(color: t.colors.glassBorder),
+        ),
+        child: Text(m.content,
+            style: AppTypography.bodyLarge.copyWith(
+                color: isUser ? Colors.white : t.colors.textPrimary)),
       ),
     );
   }
 
-  void _openThread(BuildContext context, ProjectQAThread thread) {
-    Navigator.of(context).pop();
-    Navigator.of(context).push(
-      MaterialPageRoute<void>(
-        builder: (_) => QaThreadScreen(
-          projectId: projectId,
-          threadId: thread.id,
-          title: thread.title,
+  Widget _typing(AppTokens t) => Align(
+        alignment: Alignment.centerLeft,
+        child: Container(
+          margin: const EdgeInsets.only(bottom: AppSpacing.md),
+          padding: const EdgeInsets.all(AppSpacing.md),
+          decoration: BoxDecoration(
+            color: t.colors.surface.withValues(alpha: 0.6),
+            borderRadius: AppRadii.rLg,
+            border: Border.all(color: t.colors.glassBorder),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                          t.colors.accentPrimary))),
+              const SizedBox(width: AppSpacing.md),
+              Text('Sto consultando i recap…',
+                  style: AppTypography.bodyMedium
+                      .copyWith(color: t.colors.textSecondary)),
+            ],
+          ),
         ),
-      ),
-    );
+      );
+
+  Widget _composer(AppTokens t) => SafeArea(
+        top: false,
+        child: Padding(
+          padding: EdgeInsets.only(
+              bottom: MediaQuery.of(context).viewInsets.bottom > 0
+                  ? AppSpacing.sm
+                  : 0),
+          child: Row(
+            children: [
+              Expanded(
+                child: AppTextField(
+                  controller: _ctrl,
+                  hint: 'Scrivi una domanda…',
+                  maxLines: 3,
+                ),
+              ),
+              const SizedBox(width: AppSpacing.md),
+              GestureDetector(
+                onTap: _sending ? null : _send,
+                child: Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                      gradient: t.colors.accentGradient,
+                      shape: BoxShape.circle),
+                  child: _sending
+                      ? const Padding(
+                          padding: EdgeInsets.all(AppSpacing.md),
+                          child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              valueColor:
+                                  AlwaysStoppedAnimation<Color>(Colors.white)))
+                      : const Icon(Icons.arrow_upward, color: Colors.white),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+
+  Future<void> _send() async {
+    final String question = _ctrl.text.trim();
+    if (question.isEmpty || _sending) return;
+    setState(() {
+      _sending = true;
+      _error = null;
+    });
+    _ctrl.clear();
+    try {
+      // Crea la conversazione al primo messaggio.
+      if (_threadId == null) {
+        final String title =
+            question.length > 60 ? '${question.substring(0, 60)}…' : question;
+        final ProjectQAThread thread = await ref
+            .read(qaRepositoryProvider)
+            .createThread(projectId: widget.projectId, title: title);
+        if (!mounted) return;
+        setState(() => _threadId = thread.id);
+      }
+      await ref.read(askProjectProvider).ask(
+            threadId: _threadId!,
+            projectId: widget.projectId,
+            question: question,
+          );
+    } catch (e) {
+      _error = e.toString().replaceFirst('Exception: ', '');
+    } finally {
+      if (mounted) setState(() => _sending = false);
+    }
   }
 }
