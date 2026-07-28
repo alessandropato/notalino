@@ -41,7 +41,8 @@ dependencies:
 
   # Elaborazione audio (split/decodifica per il chunking) — SRD §7.
   # ffmpeg_kit_flutter_new è il fork mantenuto (l'originale è stato ritirato).
-  ffmpeg_kit_flutter_new: ^1.6.1
+  # 4.x distribuisce XCFramework con slice arm64-simulatore (Apple Silicon).
+  ffmpeg_kit_flutter_new: ^4.5.3
 
   # Utilità
   uuid: ^4.5.1
