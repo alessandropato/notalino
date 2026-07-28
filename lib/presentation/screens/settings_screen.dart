@@ -11,7 +11,6 @@ import '../../app/theme/app_dimens.dart';
 import '../../app/theme/app_tokens.dart';
 import '../../app/theme/app_typography.dart';
 import '../../core/constants/openai_constants.dart';
-import '../../core/constants/pricing_constants.dart';
 import '../../core/utils/formatters.dart';
 import '../providers/core_providers.dart';
 import '../providers/settings_controller.dart';
@@ -165,10 +164,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             ),
             const SizedBox(height: AppSpacing.lg),
 
-            // --- Tariffe ---
-            _PricingCard(state: s),
-            const SizedBox(height: AppSpacing.lg),
-
             // --- Second brain (export/import) ---
             const _BrainCard(),
           ],
@@ -238,110 +233,6 @@ class _ModelChip extends StatelessWidget {
           ),
         ),
       ),
-    );
-  }
-}
-
-class _PricingCard extends ConsumerWidget {
-  const _PricingCard({required this.state});
-  final SettingsState state;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final AppTokens t = context.tokens;
-    return GlassCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          const SectionHeader(title: 'Tariffe (stima costi)', eyebrow: 'Consumi'),
-          const SizedBox(height: AppSpacing.sm),
-          Text(
-            'Valori usati per stimare i costi. Non sono la fattura reale OpenAI.',
-            style: AppTypography.caption.copyWith(color: t.colors.textTertiary),
-          ),
-          const SizedBox(height: AppSpacing.lg),
-          _RateRow(
-            label: 'Whisper — \$/minuto',
-            value: state.whisperPerMinuteUsd,
-            onSubmit: (double v) => ref
-                .read(settingsControllerProvider.notifier)
-                .setWhisperRate(v),
-          ),
-          const SizedBox(height: AppSpacing.md),
-          _RateRow(
-            label: '${state.model} input — \$/1M token',
-            value: state.chatPricing.inputPerMillionUsd,
-            onSubmit: (double v) => ref
-                .read(settingsControllerProvider.notifier)
-                .setChatPricing(ModelPricing(
-                  inputPerMillionUsd: v,
-                  outputPerMillionUsd: state.chatPricing.outputPerMillionUsd,
-                )),
-          ),
-          const SizedBox(height: AppSpacing.md),
-          _RateRow(
-            label: '${state.model} output — \$/1M token',
-            value: state.chatPricing.outputPerMillionUsd,
-            onSubmit: (double v) => ref
-                .read(settingsControllerProvider.notifier)
-                .setChatPricing(ModelPricing(
-                  inputPerMillionUsd: state.chatPricing.inputPerMillionUsd,
-                  outputPerMillionUsd: v,
-                )),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _RateRow extends StatefulWidget {
-  const _RateRow({
-    required this.label,
-    required this.value,
-    required this.onSubmit,
-  });
-
-  final String label;
-  final double value;
-  final ValueChanged<double> onSubmit;
-
-  @override
-  State<_RateRow> createState() => _RateRowState();
-}
-
-class _RateRowState extends State<_RateRow> {
-  late final TextEditingController _ctrl =
-      TextEditingController(text: widget.value.toString());
-
-  @override
-  void dispose() {
-    _ctrl.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final AppTokens t = context.tokens;
-    return Row(
-      children: [
-        Expanded(
-          child: Text(widget.label,
-              style: AppTypography.bodyMedium
-                  .copyWith(color: t.colors.textSecondary)),
-        ),
-        SizedBox(
-          width: 110,
-          child: AppTextField(
-            controller: _ctrl,
-            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            onChanged: (String v) {
-              final double? parsed = double.tryParse(v.replaceAll(',', '.'));
-              if (parsed != null) widget.onSubmit(parsed);
-            },
-          ),
-        ),
-      ],
     );
   }
 }
