@@ -72,7 +72,7 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
                 children: [
                   Align(
                     alignment: Alignment.centerRight,
-                    child: _ChiediButton(onTap: _openQa),
+                    child: _ChiediChatButton(onTap: _openQa),
                   ),
                   const SizedBox(height: AppSpacing.md),
                   SegmentedToggle<int>(
@@ -107,9 +107,9 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
       );
 }
 
-/// Pulsante flottante "Chiedi al progetto" (apre il popup Q&A).
-class _ChiediButton extends StatelessWidget {
-  const _ChiediButton({required this.onTap});
+/// Pulsante flottante circolare "Chiedi al progetto" — icona chat moderna.
+class _ChiediChatButton extends StatelessWidget {
+  const _ChiediChatButton({required this.onTap});
   final VoidCallback onTap;
 
   @override
@@ -117,28 +117,20 @@ class _ChiediButton extends StatelessWidget {
     final AppTokens t = context.tokens;
     return Material(
       color: Colors.transparent,
-      borderRadius: AppRadii.rPill,
+      shape: const CircleBorder(),
       child: InkWell(
-        borderRadius: AppRadii.rPill,
+        customBorder: const CircleBorder(),
         onTap: onTap,
         child: Container(
-          padding: const EdgeInsets.symmetric(
-              horizontal: AppSpacing.lg, vertical: AppSpacing.md),
+          width: 60,
+          height: 60,
           decoration: BoxDecoration(
             gradient: t.colors.accentGradient,
-            borderRadius: AppRadii.rPill,
+            shape: BoxShape.circle,
             boxShadow: t.glass.shadows,
           ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(Icons.forum_rounded, size: 18, color: Colors.white),
-              const SizedBox(width: AppSpacing.sm),
-              Text('Chiedi al progetto',
-                  style: AppTypography.label.copyWith(
-                      color: Colors.white, fontWeight: FontWeight.w600)),
-            ],
-          ),
+          child: const Icon(Icons.chat_bubble_rounded,
+              size: 26, color: Colors.white),
         ),
       ),
     );
@@ -167,8 +159,7 @@ class _ContextTab extends ConsumerWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               SectionHeader(
-                title: 'Descrizione',
-                eyebrow: 'Intento',
+                title: 'Contesto',
                 trailing: GhostButton(
                   label: 'Modifica',
                   icon: Icons.edit_outlined,
@@ -180,7 +171,7 @@ class _ContextTab extends ConsumerWidget {
               Text(
                 (project.value?.description.trim().isNotEmpty ?? false)
                     ? project.value!.description
-                    : 'Aggiungi una descrizione del progetto: verrà usata dall\'AI come intento.',
+                    : 'Aggiungi il contesto del progetto.',
                 style: AppTypography.bodyMedium.copyWith(
                   color: (project.value?.description.trim().isNotEmpty ?? false)
                       ? t.colors.textSecondary
@@ -247,7 +238,7 @@ class _ContextTab extends ConsumerWidget {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const SectionHeader(title: 'Descrizione del progetto'),
+          const SectionHeader(title: 'Contesto'),
           const SizedBox(height: AppSpacing.lg),
           AppTextField(controller: ctrl, maxLines: 5, hint: 'Di cosa tratta…'),
           const SizedBox(height: AppSpacing.xl),

@@ -30,12 +30,16 @@ class SegmentedToggle<T> extends StatelessWidget {
   Widget build(BuildContext context) {
     final AppTokens t = context.tokens;
     final int index = segments.indexWhere((s) => s.value == value);
+    const double pad = 4;
     return LayoutBuilder(
       builder: (BuildContext context, BoxConstraints c) {
-        final double segW = c.maxWidth / segments.length;
+        // Larghezza interna (dopo il padding) divisa equamente tra i segmenti.
+        final double inner = c.maxWidth - pad * 2;
+        final double segW = inner / segments.length;
         return Container(
           height: 46,
-          padding: const EdgeInsets.all(4),
+          width: c.maxWidth,
+          padding: const EdgeInsets.all(pad),
           decoration: BoxDecoration(
             color: t.colors.surface.withValues(alpha: 0.55),
             borderRadius: AppRadii.rPill,
@@ -43,12 +47,12 @@ class SegmentedToggle<T> extends StatelessWidget {
           ),
           child: Stack(
             children: [
-              // Pillola selezionata, animata.
+              // Pillola selezionata, animata: allineata al segmento corrente.
               AnimatedPositioned(
                 duration: AppMotion.base,
                 curve: AppMotion.standard,
-                left: (index < 0 ? 0 : index) * (segW - 8 / segments.length),
-                width: segW - 8,
+                left: (index < 0 ? 0 : index) * segW,
+                width: segW,
                 top: 0,
                 bottom: 0,
                 child: DecoratedBox(
