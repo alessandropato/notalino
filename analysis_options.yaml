@@ -1,0 +1,22 @@
+# Lint rigoroso per Notalino (SRD §13). Base flutter_lints + regole extra.
+include: package:flutter_lints/flutter.yaml
+
+analyzer:
+  errors:
+    todo: ignore
+  exclude:
+    - "**/*.g.dart"       # codice generato (Drift, Riverpod)
+    - "**/*.freezed.dart"
+
+linter:
+  rules:
+    - always_declare_return_types
+    - avoid_dynamic_calls
+    - prefer_final_locals
+    - prefer_const_constructors
+    - prefer_const_declarations
+    - unnecessary_await_in_return
+    - use_super_parameters
+    - directives_ordering
+    - sort_child_properties_last
+    - unawaited_futures

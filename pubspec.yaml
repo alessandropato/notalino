@@ -1,0 +1,62 @@
+name: notalino
+description: "Notalino — trascrizione e analisi AI delle riunioni. © Maketron"
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.12.2
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  cupertino_icons: ^1.0.8
+
+  # State management (SRD §3): Riverpod scelto per composabilità, testabilità
+  # dei provider e assenza di boilerplate rispetto a Bloc.
+  flutter_riverpod: ^2.6.1
+  riverpod_annotation: ^2.6.1
+
+  # Database locale relazionale (SRD §3, §5): Drift (SQLite tipizzato) per le
+  # relazioni progetti↔riunioni↔registrazioni.
+  drift: ^2.20.0
+  sqlite3_flutter_libs: ^0.5.24
+  path_provider: ^2.1.4
+  path: ^1.9.0
+
+  # Storage sicuro chiavi (Keychain iOS / Keystore Android) — SRD §12.
+  flutter_secure_storage: ^9.2.2
+
+  # Networking con retry/interceptor — SRD §3.
+  dio: ^5.7.0
+
+  # Ricezione file dalla share sheet iOS / intent Android — SRD §6.
+  receive_sharing_intent: ^1.8.1
+
+  # Selezione file (aggiunta registrazioni manuale) — SRD §6bis.
+  file_picker: ^8.1.2
+
+  # Condivisione/export del verbale Markdown — SRD §6.4, §8ter.
+  share_plus: ^10.0.2
+
+  # Elaborazione audio (split/decodifica per il chunking) — SRD §7.
+  # ffmpeg_kit_flutter_new è il fork mantenuto (l'originale è stato ritirato).
+  ffmpeg_kit_flutter_new: ^1.6.1
+
+  # Utilità
+  uuid: ^4.5.1
+  intl: ^0.19.0
+  flutter_markdown: ^0.7.4
+  collection: ^1.18.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+  flutter_lints: ^6.0.0
+  drift_dev: ^2.20.0
+  build_runner: ^2.4.13
+  riverpod_generator: ^2.6.1
+
+flutter:
+  uses-material-design: true
