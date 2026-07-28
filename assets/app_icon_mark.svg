@@ -1,0 +1,31 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+  <!-- Icona app Notalino: sfondo gradiente brand + waveform bold centrata.
+       Simmetrica e leggibile anche a 40px (requisito icone iOS). iOS applica
+       da sé la maschera degli angoli: nessun raggio qui. -->
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1024" y2="1024" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#4C8DFF" />
+      <stop offset="1" stop-color="#6FA8FF" />
+    </linearGradient>
+  </defs>
+  <rect width="1024" height="1024" fill="url(#g)" />
+
+  <!-- Waveform: 7 barre a specchio, centrate su x=512 y=512 -->
+  <g fill="#FFFFFF">
+    <rect x="233" y="422" width="64" height="180" rx="32" />
+    <rect x="337" y="347" width="64" height="330" rx="32" />
+    <rect x="441" y="257" width="64" height="510" rx="32" />
+    <rect x="545" y="212" width="64" height="600" rx="32" />
+    <rect x="649" y="257" width="64" height="510" rx="32" />
+    <rect x="753" y="347" width="64" height="330" rx="32" />
+    <rect x="857" y="422" width="64" height="180" rx="32" />
+  </g>
+
+  <!-- Piccola scintilla, accenno "AI", in alto a destra -->
+  <path d="M 792 176
+           C 797 224 810 237 858 242
+           C 810 247 797 260 792 308
+           C 787 260 774 247 726 242
+           C 774 237 787 224 792 176 Z"
+        fill="#FFFFFF" opacity="0.95" />
+</svg>
