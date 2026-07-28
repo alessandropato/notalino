@@ -196,6 +196,7 @@ Legenda: ✅ fatto · 🚧 in corso · ⬜ da fare
 ---
 
 ## 11. Problemi noti / TODO / decisioni rimandate
+- **Minimi di piattaforma** (imposti da `ffmpeg_kit_flutter_new`): Android `minSdk 24`, iOS deployment target `14.0`. Già configurati in `android/app/build.gradle.kts`, `ios/Podfile` e `project.pbxproj`.
 - iOS Share Extension + App Group entitlement da creare in Xcode (vedi §6). Import via file picker funziona nel frattempo.
 - `ffmpeg_kit_flutter_new`: verificare build effettiva su device iOS/Android (aumenta dimensione binario ~ per il pacchetto full-gpl; valutare variante "min" se il peso è un problema — l'ffmpeg qui serve solo per segment/transcode, la variante audio-only basta).
 - Overlap tra chunk disattivato nell'MVP: se emergono parole perse ai tagli, attivare `overlapSeconds` + dedup.
