@@ -25,7 +25,16 @@ class HomeScreen extends ConsumerWidget {
 
     return AppScaffold(
       appBar: AppBar(
-        title: const Text('Notalino'),
+        title: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const AppLogo(size: 26),
+            const SizedBox(width: AppSpacing.sm),
+            Text('Notalino',
+                style: AppTypography.titleLarge
+                    .copyWith(color: t.colors.textPrimary)),
+          ],
+        ),
         actions: [
           IconButton(
             tooltip: 'Consumi',
@@ -48,7 +57,20 @@ class HomeScreen extends ConsumerWidget {
         children: [
           Positioned.fill(
             child: projects.when(
-              loading: () => const Center(child: CircularProgressIndicator()),
+              loading: () => Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    AppLogo(size: 88, color: t.colors.accentPrimary),
+                    const SizedBox(height: AppSpacing.xl),
+                    const SizedBox(
+                      width: 22,
+                      height: 22,
+                      child: CircularProgressIndicator(strokeWidth: 2.4),
+                    ),
+                  ],
+                ),
+              ),
               error: (Object e, _) => Center(
                 child: Padding(
                   padding: const EdgeInsets.all(AppSpacing.xl),

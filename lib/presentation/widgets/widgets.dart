@@ -5,6 +5,7 @@ library;
 export 'app_bottom_sheet.dart';
 export 'app_buttons.dart';
 export 'app_dialog.dart';
+export 'app_logo.dart';
 export 'app_scaffold.dart';
 export 'app_text_field.dart';
 export 'empty_state.dart';

@@ -129,8 +129,8 @@ class _ChiediChatButton extends StatelessWidget {
             shape: BoxShape.circle,
             boxShadow: t.glass.shadows,
           ),
-          child: const Icon(Icons.chat_bubble_rounded,
-              size: 26, color: Colors.white),
+          alignment: Alignment.center,
+          child: const AppLogo(size: 30, color: Colors.white),
         ),
       ),
     );
@@ -408,8 +408,7 @@ class _QaHubState extends ConsumerState<_QaHub> {
             ),
             Row(
               children: [
-                Icon(Icons.chat_bubble_rounded,
-                    size: 20, color: t.colors.accentPrimary),
+                const AppLogo(size: 22),
                 const SizedBox(width: AppSpacing.sm),
                 Expanded(
                   child: Text('Chiedi al progetto',
