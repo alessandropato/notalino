@@ -195,6 +195,15 @@ Legenda: ✅ fatto · 🚧 in corso · ⬜ da fare
 
 ---
 
+## 10bis. Funzionalità aggiunte oltre l'SRD (richieste committente)
+- **Contesto all'import**: campo `Meeting.userContext` (DB v2) inserito in Nuova riunione; passato all'AI (prompt `analysis-v2`) per contestualizzare il verbale (partecipanti, scopo, collegamenti); mostrato come sezione `## Contesto` nel recap → alimenta contesto di progetto e Q&A.
+- **Import da testo**: toggle Audio/Testo in NewMeetingScreen; `ImportRecordings.createMeetingFromText` crea una "registrazione testuale" già trascritta (salta Whisper) e va diritto all'analisi.
+- **Import dalla home**: CTA "Importa riunione" (progetto scelto nella schermata dopo) + "Progetto".
+- **Export/Import second brain (.md)**: `ExportBrain`/`ImportBrain` + `BrainArchive` (build/parse round-trippabile, formato a marcatori `@@PROJECT/@@CONTEXT/@@MEETING`). In Impostazioni → card "Second brain". Le registrazioni NON sono incluse: il cuore è il `.md`. Import ricostruisce progetti+contesti+recap (Meeting completate con MeetingMarkdown, senza ri-analisi/costi).
+- **Consumi** semplificati: "Questo mese" / "Totale" / dettaglio per **modello** (niente framing "stima").
+- **UI**: bottoni a pillola, `SegmentedToggle` (glass animato), home con barra azioni, dettaglio progetto con barra in basso (Contesto/Riunioni) e **Chiedi al progetto come popup** (DraggableScrollableSheet), non più tab.
+- **Script TestFlight**: `scripts/publish_testflight.sh` — builda IPA con la versione corrente, carica su TestFlight (API key ASC o Apple ID+app-specific password via env), poi bumpa patch+build in pubspec. Versione parte da **0.0.1+1**.
+
 ## 11. Problemi noti / TODO / decisioni rimandate
 - **App eseguita su simulatore** ✅ (iPhone 16 Pro): home, empty state e design system (light **e** dark) renderizzati correttamente. Usare **`flutter run`** (o Xcode) per eseguire: la pipeline standard embedda `ffmpegkit.framework` con l'rpath corretto. ⚠️ NON installare a mano l'output di `flutter build ios --simulator` via `simctl install`: quel bundle debug ha un rpath SPM (`PackageFrameworks/…`) che a runtime dà `dyld: Library not loaded: @rpath/ffmpegkit.framework` → crash all'avvio. Con `flutter run` il problema non si presenta.
 - **SPM richiesto**: `receive_sharing_intent` supporta **solo** Swift Package Manager, quindi SPM deve restare abilitato (`flutter config --enable-swift-package-manager`, default). Tutti i plugin supportano SPM; resta un'integrazione ibrida con CocoaPods (Podfile custom con `platform :ios, '14.0'`). Migrazione full-SPM (`pod deintegrate`) possibile ma non necessaria: `flutter run`/Xcode funzionano.

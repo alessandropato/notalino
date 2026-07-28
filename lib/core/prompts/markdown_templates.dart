@@ -18,6 +18,7 @@ abstract final class MarkdownTemplates {
     required String totalDuration, // "hh:mm"
     required MeetingReport report,
     String? notes,
+    String? userContext,
   }) {
     final StringBuffer b = StringBuffer()
       ..writeln('# $title')
@@ -26,8 +27,16 @@ abstract final class MarkdownTemplates {
       ..writeln('- **Data:** ${_date(date)}')
       ..writeln(
           '- **Registrazioni:** $recordingCount · **Durata totale:** $totalDuration')
-      ..writeln()
-      ..writeln('## Sintesi')
+      ..writeln();
+    // Contesto fornito dall'utente all'import (se presente): resta nel recap e
+    // alimenta contesto di progetto e Q&A.
+    if (userContext != null && userContext.trim().isNotEmpty) {
+      b
+        ..writeln('## Contesto')
+        ..writeln(userContext.trim())
+        ..writeln();
+    }
+    b..writeln('## Sintesi')
       ..writeln(report.summary.trim().isEmpty ? _emptyList : report.summary.trim())
       ..writeln()
       ..writeln('## Problematiche');

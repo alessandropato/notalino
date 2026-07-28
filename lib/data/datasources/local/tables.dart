@@ -40,6 +40,9 @@ class Meetings extends Table {
   TextColumn get status => text()();
   TextColumn get errorMessage => text().nullable()();
   BoolColumn get needsReanalysis => boolean().withDefault(const Constant(false))();
+  // Contesto scritto dall'utente all'import (partecipanti, scopo, collegamenti
+  // a riunioni precedenti): passato all'AI per contestualizzare il verbale.
+  TextColumn get userContext => text().nullable()();
 
   @override
   Set<Column<Object>> get primaryKey => {id};

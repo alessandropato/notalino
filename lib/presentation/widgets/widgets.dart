@@ -11,5 +11,6 @@ export 'empty_state.dart';
 export 'glass_card.dart';
 export 'glass_container.dart';
 export 'section_header.dart';
+export 'segmented_toggle.dart';
 export 'status_badge.dart';
 export 'step_progress_indicator.dart';

@@ -12,7 +12,11 @@ abstract interface class MeetingRepository {
   Stream<Meeting?> watchMeeting(String id);
   Future<List<Meeting>> getMeetingsForProject(String projectId);
   Stream<List<Meeting>> watchMeetingsForProject(String projectId);
-  Future<Meeting> createMeeting({required String projectId, required String title});
+  Future<Meeting> createMeeting({
+    required String projectId,
+    required String title,
+    String? userContext,
+  });
   Future<void> updateMeeting(Meeting meeting);
   Future<void> deleteMeeting(String id);
 

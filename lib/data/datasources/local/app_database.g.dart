@@ -950,6 +950,17 @@ class $MeetingsTable extends Meetings
     ),
     defaultValue: const Constant(false),
   );
+  static const VerificationMeta _userContextMeta = const VerificationMeta(
+    'userContext',
+  );
+  @override
+  late final GeneratedColumn<String> userContext = GeneratedColumn<String>(
+    'user_context',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -959,6 +970,7 @@ class $MeetingsTable extends Meetings
     status,
     errorMessage,
     needsReanalysis,
+    userContext,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -1027,6 +1039,15 @@ class $MeetingsTable extends Meetings
         ),
       );
     }
+    if (data.containsKey('user_context')) {
+      context.handle(
+        _userContextMeta,
+        userContext.isAcceptableOrUnknown(
+          data['user_context']!,
+          _userContextMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -1064,6 +1085,10 @@ class $MeetingsTable extends Meetings
         DriftSqlType.bool,
         data['${effectivePrefix}needs_reanalysis'],
       )!,
+      userContext: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}user_context'],
+      ),
     );
   }
 
@@ -1081,6 +1106,7 @@ class MeetingRow extends DataClass implements Insertable<MeetingRow> {
   final String status;
   final String? errorMessage;
   final bool needsReanalysis;
+  final String? userContext;
   const MeetingRow({
     required this.id,
     required this.projectId,
@@ -1089,6 +1115,7 @@ class MeetingRow extends DataClass implements Insertable<MeetingRow> {
     required this.status,
     this.errorMessage,
     required this.needsReanalysis,
+    this.userContext,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -1102,6 +1129,9 @@ class MeetingRow extends DataClass implements Insertable<MeetingRow> {
       map['error_message'] = Variable<String>(errorMessage);
     }
     map['needs_reanalysis'] = Variable<bool>(needsReanalysis);
+    if (!nullToAbsent || userContext != null) {
+      map['user_context'] = Variable<String>(userContext);
+    }
     return map;
   }
 
@@ -1116,6 +1146,9 @@ class MeetingRow extends DataClass implements Insertable<MeetingRow> {
           ? const Value.absent()
           : Value(errorMessage),
       needsReanalysis: Value(needsReanalysis),
+      userContext: userContext == null && nullToAbsent
+          ? const Value.absent()
+          : Value(userContext),
     );
   }
 
@@ -1132,6 +1165,7 @@ class MeetingRow extends DataClass implements Insertable<MeetingRow> {
       status: serializer.fromJson<String>(json['status']),
       errorMessage: serializer.fromJson<String?>(json['errorMessage']),
       needsReanalysis: serializer.fromJson<bool>(json['needsReanalysis']),
+      userContext: serializer.fromJson<String?>(json['userContext']),
     );
   }
   @override
@@ -1145,6 +1179,7 @@ class MeetingRow extends DataClass implements Insertable<MeetingRow> {
       'status': serializer.toJson<String>(status),
       'errorMessage': serializer.toJson<String?>(errorMessage),
       'needsReanalysis': serializer.toJson<bool>(needsReanalysis),
+      'userContext': serializer.toJson<String?>(userContext),
     };
   }
 
@@ -1156,6 +1191,7 @@ class MeetingRow extends DataClass implements Insertable<MeetingRow> {
     String? status,
     Value<String?> errorMessage = const Value.absent(),
     bool? needsReanalysis,
+    Value<String?> userContext = const Value.absent(),
   }) => MeetingRow(
     id: id ?? this.id,
     projectId: projectId ?? this.projectId,
@@ -1164,6 +1200,7 @@ class MeetingRow extends DataClass implements Insertable<MeetingRow> {
     status: status ?? this.status,
     errorMessage: errorMessage.present ? errorMessage.value : this.errorMessage,
     needsReanalysis: needsReanalysis ?? this.needsReanalysis,
+    userContext: userContext.present ? userContext.value : this.userContext,
   );
   MeetingRow copyWithCompanion(MeetingsCompanion data) {
     return MeetingRow(
@@ -1178,6 +1215,9 @@ class MeetingRow extends DataClass implements Insertable<MeetingRow> {
       needsReanalysis: data.needsReanalysis.present
           ? data.needsReanalysis.value
           : this.needsReanalysis,
+      userContext: data.userContext.present
+          ? data.userContext.value
+          : this.userContext,
     );
   }
 
@@ -1190,7 +1230,8 @@ class MeetingRow extends DataClass implements Insertable<MeetingRow> {
           ..write('createdAt: $createdAt, ')
           ..write('status: $status, ')
           ..write('errorMessage: $errorMessage, ')
-          ..write('needsReanalysis: $needsReanalysis')
+          ..write('needsReanalysis: $needsReanalysis, ')
+          ..write('userContext: $userContext')
           ..write(')'))
         .toString();
   }
@@ -1204,6 +1245,7 @@ class MeetingRow extends DataClass implements Insertable<MeetingRow> {
     status,
     errorMessage,
     needsReanalysis,
+    userContext,
   );
   @override
   bool operator ==(Object other) =>
@@ -1215,7 +1257,8 @@ class MeetingRow extends DataClass implements Insertable<MeetingRow> {
           other.createdAt == this.createdAt &&
           other.status == this.status &&
           other.errorMessage == this.errorMessage &&
-          other.needsReanalysis == this.needsReanalysis);
+          other.needsReanalysis == this.needsReanalysis &&
+          other.userContext == this.userContext);
 }
 
 class MeetingsCompanion extends UpdateCompanion<MeetingRow> {
@@ -1226,6 +1269,7 @@ class MeetingsCompanion extends UpdateCompanion<MeetingRow> {
   final Value<String> status;
   final Value<String?> errorMessage;
   final Value<bool> needsReanalysis;
+  final Value<String?> userContext;
   final Value<int> rowid;
   const MeetingsCompanion({
     this.id = const Value.absent(),
@@ -1235,6 +1279,7 @@ class MeetingsCompanion extends UpdateCompanion<MeetingRow> {
     this.status = const Value.absent(),
     this.errorMessage = const Value.absent(),
     this.needsReanalysis = const Value.absent(),
+    this.userContext = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   MeetingsCompanion.insert({
@@ -1245,6 +1290,7 @@ class MeetingsCompanion extends UpdateCompanion<MeetingRow> {
     required String status,
     this.errorMessage = const Value.absent(),
     this.needsReanalysis = const Value.absent(),
+    this.userContext = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        projectId = Value(projectId),
@@ -1259,6 +1305,7 @@ class MeetingsCompanion extends UpdateCompanion<MeetingRow> {
     Expression<String>? status,
     Expression<String>? errorMessage,
     Expression<bool>? needsReanalysis,
+    Expression<String>? userContext,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -1269,6 +1316,7 @@ class MeetingsCompanion extends UpdateCompanion<MeetingRow> {
       if (status != null) 'status': status,
       if (errorMessage != null) 'error_message': errorMessage,
       if (needsReanalysis != null) 'needs_reanalysis': needsReanalysis,
+      if (userContext != null) 'user_context': userContext,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -1281,6 +1329,7 @@ class MeetingsCompanion extends UpdateCompanion<MeetingRow> {
     Value<String>? status,
     Value<String?>? errorMessage,
     Value<bool>? needsReanalysis,
+    Value<String?>? userContext,
     Value<int>? rowid,
   }) {
     return MeetingsCompanion(
@@ -1291,6 +1340,7 @@ class MeetingsCompanion extends UpdateCompanion<MeetingRow> {
       status: status ?? this.status,
       errorMessage: errorMessage ?? this.errorMessage,
       needsReanalysis: needsReanalysis ?? this.needsReanalysis,
+      userContext: userContext ?? this.userContext,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -1319,6 +1369,9 @@ class MeetingsCompanion extends UpdateCompanion<MeetingRow> {
     if (needsReanalysis.present) {
       map['needs_reanalysis'] = Variable<bool>(needsReanalysis.value);
     }
+    if (userContext.present) {
+      map['user_context'] = Variable<String>(userContext.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -1335,6 +1388,7 @@ class MeetingsCompanion extends UpdateCompanion<MeetingRow> {
           ..write('status: $status, ')
           ..write('errorMessage: $errorMessage, ')
           ..write('needsReanalysis: $needsReanalysis, ')
+          ..write('userContext: $userContext, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -7055,6 +7109,7 @@ typedef $$MeetingsTableCreateCompanionBuilder =
       required String status,
       Value<String?> errorMessage,
       Value<bool> needsReanalysis,
+      Value<String?> userContext,
       Value<int> rowid,
     });
 typedef $$MeetingsTableUpdateCompanionBuilder =
@@ -7066,6 +7121,7 @@ typedef $$MeetingsTableUpdateCompanionBuilder =
       Value<String> status,
       Value<String?> errorMessage,
       Value<bool> needsReanalysis,
+      Value<String?> userContext,
       Value<int> rowid,
     });
 
@@ -7201,6 +7257,11 @@ class $$MeetingsTableFilterComposer
 
   ColumnFilters<bool> get needsReanalysis => $composableBuilder(
     column: $table.needsReanalysis,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get userContext => $composableBuilder(
+    column: $table.userContext,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -7367,6 +7428,11 @@ class $$MeetingsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get userContext => $composableBuilder(
+    column: $table.userContext,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   $$ProjectsTableOrderingComposer get projectId {
     final $$ProjectsTableOrderingComposer composer = $composerBuilder(
       composer: this,
@@ -7419,6 +7485,11 @@ class $$MeetingsTableAnnotationComposer
 
   GeneratedColumn<bool> get needsReanalysis => $composableBuilder(
     column: $table.needsReanalysis,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get userContext => $composableBuilder(
+    column: $table.userContext,
     builder: (column) => column,
   );
 
@@ -7587,6 +7658,7 @@ class $$MeetingsTableTableManager
                 Value<String> status = const Value.absent(),
                 Value<String?> errorMessage = const Value.absent(),
                 Value<bool> needsReanalysis = const Value.absent(),
+                Value<String?> userContext = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => MeetingsCompanion(
                 id: id,
@@ -7596,6 +7668,7 @@ class $$MeetingsTableTableManager
                 status: status,
                 errorMessage: errorMessage,
                 needsReanalysis: needsReanalysis,
+                userContext: userContext,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -7607,6 +7680,7 @@ class $$MeetingsTableTableManager
                 required String status,
                 Value<String?> errorMessage = const Value.absent(),
                 Value<bool> needsReanalysis = const Value.absent(),
+                Value<String?> userContext = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => MeetingsCompanion.insert(
                 id: id,
@@ -7616,6 +7690,7 @@ class $$MeetingsTableTableManager
                 status: status,
                 errorMessage: errorMessage,
                 needsReanalysis: needsReanalysis,
+                userContext: userContext,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0

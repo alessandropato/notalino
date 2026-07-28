@@ -4,7 +4,8 @@ import '../entities/meeting_report.dart';
 /// verbale, generazione contesto e Q&A, tutte basate su chat completion.
 abstract interface class AnalysisService {
   /// Analizza la trascrizione e produce il verbale strutturato (SRD §8).
-  Future<AnalysisResult> analyzeTranscript(String transcript);
+  /// [userContext] è il contesto scritto dall'utente per contestualizzare.
+  Future<AnalysisResult> analyzeTranscript(String transcript, {String? userContext});
 
   /// Chiamata generica (contesto progetto, Q&A): system + user → testo.
   Future<ChatResult> complete({

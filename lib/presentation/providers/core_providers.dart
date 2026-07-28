@@ -28,6 +28,8 @@ import '../../domain/services/share_intent_service.dart';
 import '../../domain/services/transcription_service.dart';
 import '../../domain/usecases/analyze_meeting.dart';
 import '../../domain/usecases/ask_project.dart';
+import '../../domain/usecases/export_brain.dart';
+import '../../domain/usecases/import_brain.dart';
 import '../../domain/usecases/import_recordings.dart';
 import '../../domain/usecases/transcribe_meeting.dart';
 import '../../domain/usecases/update_project_context.dart';
@@ -141,6 +143,18 @@ final Provider<AnalyzeMeeting> analyzeMeetingProvider =
           settingsRepository: ref.watch(settingsRepositoryProvider),
           analysisService: ref.watch(analysisServiceProvider),
           updateProjectContext: ref.watch(updateProjectContextProvider),
+        ));
+
+final Provider<ExportBrain> exportBrainProvider =
+    Provider<ExportBrain>((ref) => ExportBrain(
+          projectRepository: ref.watch(projectRepositoryProvider),
+          meetingRepository: ref.watch(meetingRepositoryProvider),
+        ));
+
+final Provider<ImportBrain> importBrainProvider =
+    Provider<ImportBrain>((ref) => ImportBrain(
+          projectRepository: ref.watch(projectRepositoryProvider),
+          meetingRepository: ref.watch(meetingRepositoryProvider),
         ));
 
 final Provider<AskProject> askProjectProvider =

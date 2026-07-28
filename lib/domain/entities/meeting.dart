@@ -14,6 +14,7 @@ class Meeting {
     required this.status,
     this.errorMessage,
     this.needsReanalysis = false,
+    this.userContext,
   });
 
   final String id;
@@ -29,6 +30,10 @@ class Meeting {
   /// hanno invalidato il verbale (SRD §6bis.5): serve rigenerare.
   final bool needsReanalysis;
 
+  /// Contesto scritto dall'utente all'import (partecipanti, scopo, collegamenti
+  /// a riunioni precedenti). Passato all'AI per contestualizzare il verbale.
+  final String? userContext;
+
   Meeting copyWith({
     String? title,
     MeetingStatus? status,
@@ -36,6 +41,7 @@ class Meeting {
     bool clearError = false,
     bool? needsReanalysis,
     String? projectId,
+    String? userContext,
   }) =>
       Meeting(
         id: id,
@@ -45,5 +51,6 @@ class Meeting {
         status: status ?? this.status,
         errorMessage: clearError ? null : (errorMessage ?? this.errorMessage),
         needsReanalysis: needsReanalysis ?? this.needsReanalysis,
+        userContext: userContext ?? this.userContext,
       );
 }

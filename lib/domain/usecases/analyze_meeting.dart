@@ -61,8 +61,10 @@ class AnalyzeMeeting {
     );
 
     try {
-      final AnalysisResult result =
-          await _analysis.analyzeTranscript(transcript.fullText);
+      final AnalysisResult result = await _analysis.analyzeTranscript(
+        transcript.fullText,
+        userContext: meeting.userContext,
+      );
 
       final MeetingReport report = MeetingReport(
         id: _uuid.v4(),

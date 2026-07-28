@@ -1,11 +1,19 @@
+import 'dart:io';
+
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:path/path.dart' as p;
+import 'package:path_provider/path_provider.dart';
+import 'package:share_plus/share_plus.dart';
 
 import '../../app/theme/app_dimens.dart';
 import '../../app/theme/app_tokens.dart';
 import '../../app/theme/app_typography.dart';
 import '../../core/constants/openai_constants.dart';
 import '../../core/constants/pricing_constants.dart';
+import '../../core/utils/formatters.dart';
+import '../providers/core_providers.dart';
 import '../providers/settings_controller.dart';
 import '../widgets/widgets.dart';
 
@@ -159,6 +167,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
             // --- Tariffe ---
             _PricingCard(state: s),
+            const SizedBox(height: AppSpacing.lg),
+
+            // --- Second brain (export/import) ---
+            const _BrainCard(),
           ],
         ),
       ),
@@ -331,5 +343,108 @@ class _RateRowState extends State<_RateRow> {
         ),
       ],
     );
+  }
+}
+
+/// Export/Import del second brain in Markdown (§export). Le registrazioni non
+/// sono incluse: il cuore è il .md (contesto progetti + recap riunioni).
+class _BrainCard extends ConsumerStatefulWidget {
+  const _BrainCard();
+
+  @override
+  ConsumerState<_BrainCard> createState() => _BrainCardState();
+}
+
+class _BrainCardState extends ConsumerState<_BrainCard> {
+  bool _exporting = false;
+  bool _importing = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final AppTokens t = context.tokens;
+    return GlassCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const SectionHeader(title: 'Second brain', eyebrow: 'Backup'),
+          const SizedBox(height: AppSpacing.sm),
+          Text(
+            'Esporta o importa tutto in Markdown (progetti, contesti e recap). Le registrazioni audio non sono incluse: il cuore è il .md.',
+            style: AppTypography.caption.copyWith(color: t.colors.textTertiary),
+          ),
+          const SizedBox(height: AppSpacing.lg),
+          Row(
+            children: [
+              Expanded(
+                child: SecondaryButton(
+                  label: 'Esporta',
+                  icon: Icons.ios_share,
+                  loading: _exporting,
+                  expand: true,
+                  onPressed: _export,
+                ),
+              ),
+              const SizedBox(width: AppSpacing.md),
+              Expanded(
+                child: SecondaryButton(
+                  label: 'Importa',
+                  icon: Icons.download,
+                  loading: _importing,
+                  expand: true,
+                  onPressed: _import,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _export() async {
+    setState(() => _exporting = true);
+    try {
+      final String archive = await ref.read(exportBrainProvider).call();
+      final Directory dir = await getTemporaryDirectory();
+      final String name = 'notalino-brain-${Formatters.isoDate(DateTime.now())}.md';
+      final File file = File(p.join(dir.path, name));
+      await file.writeAsString(archive);
+      await SharePlus.instance.share(
+        ShareParams(files: [XFile(file.path)], subject: 'Notalino second brain'),
+      );
+    } catch (e) {
+      _snack('Errore export: $e');
+    } finally {
+      if (mounted) setState(() => _exporting = false);
+    }
+  }
+
+  Future<void> _import() async {
+    setState(() => _importing = true);
+    try {
+      final FilePickerResult? res = await FilePicker.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: const ['md', 'markdown', 'txt'],
+      );
+      final String? path = res?.files.single.path;
+      if (path == null) {
+        if (mounted) setState(() => _importing = false);
+        return;
+      }
+      final String content = await File(path).readAsString();
+      final result = await ref.read(importBrainProvider).call(content);
+      _snack(
+          'Importati ${result.projects} progetti e ${result.meetings} riunioni.');
+    } catch (e) {
+      _snack('Errore import: $e');
+    } finally {
+      if (mounted) setState(() => _importing = false);
+    }
+  }
+
+  void _snack(String msg) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(msg)));
   }
 }

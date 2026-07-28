@@ -19,13 +19,16 @@ class OpenAiAnalysisService implements AnalysisService {
   final Future<String> Function() _modelProvider;
 
   @override
-  Future<AnalysisResult> analyzeTranscript(String transcript) async {
+  Future<AnalysisResult> analyzeTranscript(
+    String transcript, {
+    String? userContext,
+  }) async {
     final String model = await _modelProvider();
 
     ChatCompletionResponse res = await _chatApi.complete(
       model: model,
       systemPrompt: AnalysisPrompt.system,
-      userPrompt: AnalysisPrompt.user(transcript),
+      userPrompt: AnalysisPrompt.user(transcript, userContext: userContext),
       jsonMode: true,
     );
 
@@ -39,7 +42,7 @@ class OpenAiAnalysisService implements AnalysisService {
         model: model,
         systemPrompt: AnalysisPrompt.system,
         userPrompt:
-            '${AnalysisPrompt.user(transcript)}\n\n${AnalysisPrompt.retryFixFormat}',
+            '${AnalysisPrompt.user(transcript, userContext: userContext)}\n\n${AnalysisPrompt.retryFixFormat}',
         jsonMode: true,
       );
       parsed = _tryParse(res.content);

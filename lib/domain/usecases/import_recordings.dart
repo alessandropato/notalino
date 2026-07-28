@@ -5,6 +5,7 @@ import 'package:uuid/uuid.dart';
 import '../entities/meeting.dart';
 import '../entities/meeting_status.dart';
 import '../entities/recording.dart';
+import '../entities/transcript.dart';
 import '../repositories/meeting_repository.dart';
 import '../services/audio_processor.dart';
 import '../services/recording_file_store.dart';
@@ -25,15 +26,54 @@ class ImportRecordings {
   final AudioProcessor _audioProcessor;
   static const Uuid _uuid = Uuid();
 
-  /// Crea una nuova riunione con i file dati.
+  /// Crea una nuova riunione con i file dati e l'eventuale contesto utente.
   Future<Meeting> createMeetingWithFiles({
     required String projectId,
     required String title,
     required List<String> sourceFilePaths,
+    String? userContext,
   }) async {
-    final Meeting meeting =
-        await _meetingRepo.createMeeting(projectId: projectId, title: title);
+    final Meeting meeting = await _meetingRepo.createMeeting(
+      projectId: projectId,
+      title: title,
+      userContext: userContext,
+    );
     await _attach(meeting.id, sourceFilePaths, startIndex: 0);
+    return meeting;
+  }
+
+  /// Crea una riunione da una trascrizione già pronta incollata dall'utente
+  /// (minuta/trascrizione esistente): nessun audio, si salta Whisper. Crea una
+  /// "registrazione testuale" già trascritta, così la pipeline procede diritta
+  /// all'analisi (§import testo).
+  Future<Meeting> createMeetingFromText({
+    required String projectId,
+    required String title,
+    required String transcriptText,
+    String? userContext,
+  }) async {
+    final Meeting meeting = await _meetingRepo.createMeeting(
+      projectId: projectId,
+      title: title,
+      userContext: userContext,
+    );
+    final String recordingId = _uuid.v4();
+    await _meetingRepo.addRecording(Recording(
+      id: recordingId,
+      meetingId: meeting.id,
+      orderIndex: 0,
+      sourceFileName: 'Trascrizione incollata',
+      localFilePath: '', // nessun file audio
+      fileSizeBytes: 0,
+      status: RecordingStatus.transcribed,
+      createdAt: DateTime.now(),
+      chunkCount: 0,
+    ));
+    await _meetingRepo.saveRecordingTranscript(RecordingTranscript(
+      id: _uuid.v4(),
+      recordingId: recordingId,
+      text: transcriptText.trim(),
+    ));
     return meeting;
   }
 

@@ -27,6 +27,7 @@ class DriftMeetingRepository implements MeetingRepository {
         status: MeetingStatus.fromName(r.status),
         errorMessage: r.errorMessage,
         needsReanalysis: r.needsReanalysis,
+        userContext: r.userContext,
       );
 
   @override
@@ -64,6 +65,7 @@ class DriftMeetingRepository implements MeetingRepository {
   Future<Meeting> createMeeting({
     required String projectId,
     required String title,
+    String? userContext,
   }) async {
     final Meeting m = Meeting(
       id: _uuid.v4(),
@@ -71,6 +73,7 @@ class DriftMeetingRepository implements MeetingRepository {
       title: title,
       createdAt: DateTime.now(),
       status: MeetingStatus.draft,
+      userContext: userContext,
     );
     await _db.into(_db.meetings).insert(
           MeetingsCompanion.insert(
@@ -79,6 +82,7 @@ class DriftMeetingRepository implements MeetingRepository {
             title: m.title,
             createdAt: m.createdAt,
             status: m.status.name,
+            userContext: Value(m.userContext),
           ),
         );
     return m;
@@ -94,6 +98,7 @@ class DriftMeetingRepository implements MeetingRepository {
         projectId: Value(meeting.projectId),
         errorMessage: Value(meeting.errorMessage),
         needsReanalysis: Value(meeting.needsReanalysis),
+        userContext: Value(meeting.userContext),
       ),
     );
   }

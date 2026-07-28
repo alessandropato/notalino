@@ -26,6 +26,7 @@ abstract final class GenerateMeetingMarkdown {
       recordingCount: recordings.length,
       totalDuration: Formatters.hhmm(totalSeconds),
       report: report,
+      userContext: meeting.userContext,
     );
   }
 }

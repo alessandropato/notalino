@@ -19,8 +19,11 @@ import '../widgets/widgets.dart';
 import 'meeting_detail_screen.dart';
 import 'settings_screen.dart';
 
+/// Sorgente della riunione: audio da trascrivere o trascrizione già pronta.
+enum _ImportMode { audio, text }
+
 /// Nuova riunione / Import (SRD §6.1, §6bis, §10 schermata 5).
-/// Riceve file già selezionati (share sheet) oppure lascia sceglierli in-app.
+/// Supporta import da audio (Whisper) o da trascrizione/minuta già scritta.
 class NewMeetingScreen extends ConsumerStatefulWidget {
   const NewMeetingScreen({
     super.key,
@@ -38,10 +41,12 @@ class NewMeetingScreen extends ConsumerStatefulWidget {
 class _NewMeetingScreenState extends ConsumerState<NewMeetingScreen> {
   static const String _newProjectSentinel = '__new__';
 
+  _ImportMode _mode = _ImportMode.audio;
   final List<String> _files = <String>[];
   final TextEditingController _titleCtrl = TextEditingController();
+  final TextEditingController _contextCtrl = TextEditingController();
+  final TextEditingController _transcriptCtrl = TextEditingController();
 
-  /// Scelta corrente: id progetto esistente, [_newProjectSentinel], o null.
   String? _projectChoice;
   final TextEditingController _newProjectCtrl = TextEditingController();
   bool _busy = false;
@@ -59,6 +64,8 @@ class _NewMeetingScreenState extends ConsumerState<NewMeetingScreen> {
   @override
   void dispose() {
     _titleCtrl.dispose();
+    _contextCtrl.dispose();
+    _transcriptCtrl.dispose();
     _newProjectCtrl.dispose();
     super.dispose();
   }
@@ -84,38 +91,18 @@ class _NewMeetingScreenState extends ConsumerState<NewMeetingScreen> {
               ),
             ),
 
-          // --- File ---
-          GlassCard(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                SectionHeader(
-                  title: 'Registrazioni',
-                  eyebrow: 'Audio',
-                  trailing: GhostButton(
-                    label: 'Aggiungi',
-                    icon: Icons.add,
-                    onPressed: _pickFiles,
-                  ),
-                ),
-                const SizedBox(height: AppSpacing.md),
-                if (_files.isEmpty)
-                  Text(
-                    'Nessun file selezionato. Aggiungi una o più registrazioni: verranno unite e analizzate come un\'unica riunione.',
-                    style: AppTypography.bodyMedium
-                        .copyWith(color: t.colors.textTertiary),
-                  )
-                else
-                  ..._files.asMap().entries.map((MapEntry<int, String> e) =>
-                      _FileRow(
-                        index: e.key + 1,
-                        path: e.value,
-                        onRemove: () =>
-                            setState(() => _files.removeAt(e.key)),
-                      )),
-              ],
-            ),
+          // --- Sorgente: audio / testo ---
+          SegmentedToggle<_ImportMode>(
+            value: _mode,
+            segments: const [
+              ToggleSegment(value: _ImportMode.audio, label: 'Audio', icon: Icons.graphic_eq),
+              ToggleSegment(value: _ImportMode.text, label: 'Testo', icon: Icons.notes),
+            ],
+            onChanged: (m) => setState(() => _mode = m),
           ),
+          const SizedBox(height: AppSpacing.lg),
+
+          if (_mode == _ImportMode.audio) _audioCard(t) else _textCard(t),
           const SizedBox(height: AppSpacing.lg),
 
           // --- Titolo ---
@@ -127,57 +114,32 @@ class _NewMeetingScreenState extends ConsumerState<NewMeetingScreen> {
           ),
           const SizedBox(height: AppSpacing.lg),
 
-          // --- Progetto ---
+          // --- Contesto ---
           GlassCard(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const SectionHeader(title: 'Progetto', eyebrow: 'Organizza'),
+                const SectionHeader(title: 'Contesto', eyebrow: 'Facoltativo'),
+                const SizedBox(height: AppSpacing.sm),
+                Text(
+                  'Aiuta l\'AI a contestualizzare il verbale: partecipanti, scopo, collegamenti a riunioni precedenti.',
+                  style: AppTypography.caption
+                      .copyWith(color: t.colors.textTertiary),
+                ),
                 const SizedBox(height: AppSpacing.md),
-                projects.when(
-                  loading: () =>
-                      const Center(child: CircularProgressIndicator()),
-                  error: (Object e, _) => Text('Errore: $e'),
-                  data: (List<Project> list) => RadioGroup<String>(
-                    groupValue: _projectChoice,
-                    onChanged: (String? v) =>
-                        setState(() => _projectChoice = v),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        ...list.map((Project p) => RadioListTile<String>(
-                              contentPadding: EdgeInsets.zero,
-                              title: Text(p.name,
-                                  style: AppTypography.bodyLarge
-                                      .copyWith(color: t.colors.textPrimary)),
-                              value: p.id,
-                              activeColor: t.colors.accentPrimary,
-                            )),
-                        RadioListTile<String>(
-                          contentPadding: EdgeInsets.zero,
-                          title: Text('Crea nuovo progetto',
-                              style: AppTypography.bodyLarge
-                                  .copyWith(color: t.colors.accentPrimary)),
-                          value: _newProjectSentinel,
-                          activeColor: t.colors.accentPrimary,
-                        ),
-                        if (_creatingNewProject)
-                          Padding(
-                            padding: const EdgeInsets.only(top: AppSpacing.sm),
-                            child: AppTextField(
-                              controller: _newProjectCtrl,
-                              hint: 'Nome del nuovo progetto',
-                              // Riabilita il bottone "Crea" mentre si digita.
-                              onChanged: (_) => setState(() {}),
-                            ),
-                          ),
-                      ],
-                    ),
-                  ),
+                AppTextField(
+                  controller: _contextCtrl,
+                  maxLines: 4,
+                  hint:
+                      'Es. Riunione di recap interna a seguito di quella della scorsa settimana; presenti io, Marco e Paolo.',
                 ),
               ],
             ),
           ),
+          const SizedBox(height: AppSpacing.lg),
+
+          // --- Progetto ---
+          _projectCard(t, projects),
           const SizedBox(height: AppSpacing.xl),
 
           PrimaryButton(
@@ -191,8 +153,114 @@ class _NewMeetingScreenState extends ConsumerState<NewMeetingScreen> {
     );
   }
 
+  Widget _audioCard(AppTokens t) => GlassCard(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            SectionHeader(
+              title: 'Registrazioni',
+              eyebrow: 'Audio',
+              trailing: GhostButton(
+                label: 'Aggiungi',
+                icon: Icons.add,
+                onPressed: _pickFiles,
+              ),
+            ),
+            const SizedBox(height: AppSpacing.md),
+            if (_files.isEmpty)
+              Text(
+                'Nessun file selezionato. Aggiungi una o più registrazioni: verranno unite e analizzate come un\'unica riunione.',
+                style: AppTypography.bodyMedium
+                    .copyWith(color: t.colors.textTertiary),
+              )
+            else
+              ..._files.asMap().entries.map((MapEntry<int, String> e) =>
+                  _FileRow(
+                    index: e.key + 1,
+                    path: e.value,
+                    onRemove: () => setState(() => _files.removeAt(e.key)),
+                  )),
+          ],
+        ),
+      );
+
+  Widget _textCard(AppTokens t) => GlassCard(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const SectionHeader(title: 'Trascrizione', eyebrow: 'Testo'),
+            const SizedBox(height: AppSpacing.sm),
+            Text(
+              'Incolla una trascrizione o una minuta già pronta: verrà analizzata direttamente, senza passare da Whisper.',
+              style:
+                  AppTypography.caption.copyWith(color: t.colors.textTertiary),
+            ),
+            const SizedBox(height: AppSpacing.md),
+            AppTextField(
+              controller: _transcriptCtrl,
+              maxLines: 10,
+              hint: 'Incolla qui il testo della riunione…',
+              onChanged: (_) => setState(() {}),
+            ),
+          ],
+        ),
+      );
+
+  Widget _projectCard(AppTokens t, AsyncValue<List<Project>> projects) =>
+      GlassCard(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const SectionHeader(title: 'Progetto', eyebrow: 'Organizza'),
+            const SizedBox(height: AppSpacing.md),
+            projects.when(
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (Object e, _) => Text('Errore: $e'),
+              data: (List<Project> list) => RadioGroup<String>(
+                groupValue: _projectChoice,
+                onChanged: (String? v) => setState(() => _projectChoice = v),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    ...list.map((Project p) => RadioListTile<String>(
+                          contentPadding: EdgeInsets.zero,
+                          title: Text(p.name,
+                              style: AppTypography.bodyLarge
+                                  .copyWith(color: t.colors.textPrimary)),
+                          value: p.id,
+                          activeColor: t.colors.accentPrimary,
+                        )),
+                    RadioListTile<String>(
+                      contentPadding: EdgeInsets.zero,
+                      title: Text('Crea nuovo progetto',
+                          style: AppTypography.bodyLarge
+                              .copyWith(color: t.colors.accentPrimary)),
+                      value: _newProjectSentinel,
+                      activeColor: t.colors.accentPrimary,
+                    ),
+                    if (_creatingNewProject)
+                      Padding(
+                        padding: const EdgeInsets.only(top: AppSpacing.sm),
+                        child: AppTextField(
+                          controller: _newProjectCtrl,
+                          hint: 'Nome del nuovo progetto',
+                          onChanged: (_) => setState(() {}),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+
   bool _canSubmit(bool hasApiKey) {
-    if (_busy || _files.isEmpty) return false;
+    if (_busy) return false;
+    final bool hasSource = _mode == _ImportMode.audio
+        ? _files.isNotEmpty
+        : _transcriptCtrl.text.trim().isNotEmpty;
+    if (!hasSource) return false;
     if (_creatingNewProject) return _newProjectCtrl.text.trim().isNotEmpty;
     return _projectChoice != null;
   }
@@ -205,9 +273,8 @@ class _NewMeetingScreenState extends ConsumerState<NewMeetingScreen> {
     );
     if (result == null) return;
     setState(() {
-      _files.addAll(result.files
-          .map((PlatformFile f) => f.path)
-          .whereType<String>());
+      _files.addAll(
+          result.files.map((PlatformFile f) => f.path).whereType<String>());
     });
   }
 
@@ -222,14 +289,29 @@ class _NewMeetingScreenState extends ConsumerState<NewMeetingScreen> {
         projectId = created.id;
       }
 
-      final Meeting meeting =
-          await ref.read(importRecordingsProvider).createMeetingWithFiles(
-                projectId: projectId,
-                title: _titleCtrl.text.trim().isEmpty
-                    ? 'Riunione ${Formatters.date(DateTime.now())}'
-                    : _titleCtrl.text.trim(),
-                sourceFilePaths: _files,
-              );
+      final String userCtx = _contextCtrl.text.trim();
+      final String title = _titleCtrl.text.trim().isEmpty
+          ? 'Riunione ${Formatters.date(DateTime.now())}'
+          : _titleCtrl.text.trim();
+
+      final Meeting meeting;
+      if (_mode == _ImportMode.audio) {
+        meeting =
+            await ref.read(importRecordingsProvider).createMeetingWithFiles(
+                  projectId: projectId,
+                  title: title,
+                  sourceFilePaths: _files,
+                  userContext: userCtx.isEmpty ? null : userCtx,
+                );
+      } else {
+        meeting =
+            await ref.read(importRecordingsProvider).createMeetingFromText(
+                  projectId: projectId,
+                  title: title,
+                  transcriptText: _transcriptCtrl.text.trim(),
+                  userContext: userCtx.isEmpty ? null : userCtx,
+                );
+      }
 
       // Avvia l'elaborazione in background (SRD §10: non bloccare la UI).
       unawaited(

@@ -17,36 +17,128 @@ import 'meeting_detail_screen.dart';
 import 'new_meeting_screen.dart';
 import 'qa_thread_screen.dart';
 
-/// Dettaglio progetto (SRD §6ter, §10 schermata 2): apre sul contesto,
-/// con aree Contesto / Riunioni / Chiedi al progetto.
-class ProjectDetailScreen extends ConsumerWidget {
+/// Dettaglio progetto (SRD §6ter, §10 schermata 2): apre sul contesto.
+/// Navigazione a due sezioni (Contesto, Riunioni) con barra in basso; il Q&A
+/// ("Chiedi al progetto") è un popup, non una tab — app snella e intuitiva.
+class ProjectDetailScreen extends ConsumerStatefulWidget {
   const ProjectDetailScreen({super.key, required this.projectId});
   final String projectId;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final AsyncValue<Project?> project = ref.watch(projectProvider(projectId));
+  ConsumerState<ProjectDetailScreen> createState() =>
+      _ProjectDetailScreenState();
+}
 
-    return DefaultTabController(
-      length: 3,
-      child: AppScaffold(
-        appBar: AppBar(
-          title: Text(project.value?.name ?? 'Progetto',
-              overflow: TextOverflow.ellipsis),
-          bottom: const TabBar(
-            tabs: [
-              Tab(text: 'Contesto'),
-              Tab(text: 'Riunioni'),
-              Tab(text: 'Chiedi'),
+class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
+  int _index = 0;
+
+  @override
+  Widget build(BuildContext context) {
+    final AsyncValue<Project?> project =
+        ref.watch(projectProvider(widget.projectId));
+
+    return AppScaffold(
+      appBar: AppBar(
+        title: Text(project.value?.name ?? 'Progetto',
+            overflow: TextOverflow.ellipsis),
+        actions: [
+          IconButton(
+            tooltip: 'Carica riunione',
+            icon: const Icon(Icons.add),
+            onPressed: _loadMeeting,
+          ),
+          const SizedBox(width: AppSpacing.sm),
+        ],
+      ),
+      body: Stack(
+        children: [
+          Positioned.fill(
+            child: IndexedStack(
+              index: _index,
+              children: [
+                _ContextTab(projectId: widget.projectId),
+                _MeetingsTab(projectId: widget.projectId, onLoad: _loadMeeting),
+              ],
+            ),
+          ),
+          Positioned(
+            left: AppSpacing.lg,
+            right: AppSpacing.lg,
+            bottom: AppSpacing.lg,
+            child: SafeArea(
+              top: false,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: _ChiediButton(onTap: _openQa),
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                  SegmentedToggle<int>(
+                    value: _index,
+                    segments: const [
+                      ToggleSegment(value: 0, label: 'Contesto', icon: Icons.auto_awesome_outlined),
+                      ToggleSegment(value: 1, label: 'Riunioni', icon: Icons.event_note_outlined),
+                    ],
+                    onChanged: (i) => setState(() => _index = i),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _loadMeeting() => Navigator.of(context).push(
+        MaterialPageRoute<void>(
+          builder: (_) => NewMeetingScreen(presetProjectId: widget.projectId),
+        ),
+      );
+
+  void _openQa() => showModalBottomSheet<void>(
+        context: context,
+        isScrollControlled: true,
+        backgroundColor: Colors.transparent,
+        barrierColor: context.tokens.colors.overlayTint.withValues(alpha: 0.4),
+        builder: (_) => _QaHub(projectId: widget.projectId),
+      );
+}
+
+/// Pulsante flottante "Chiedi al progetto" (apre il popup Q&A).
+class _ChiediButton extends StatelessWidget {
+  const _ChiediButton({required this.onTap});
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final AppTokens t = context.tokens;
+    return Material(
+      color: Colors.transparent,
+      borderRadius: AppRadii.rPill,
+      child: InkWell(
+        borderRadius: AppRadii.rPill,
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.lg, vertical: AppSpacing.md),
+          decoration: BoxDecoration(
+            gradient: t.colors.accentGradient,
+            borderRadius: AppRadii.rPill,
+            boxShadow: t.glass.shadows,
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.forum_rounded, size: 18, color: Colors.white),
+              const SizedBox(width: AppSpacing.sm),
+              Text('Chiedi al progetto',
+                  style: AppTypography.label.copyWith(
+                      color: Colors.white, fontWeight: FontWeight.w600)),
             ],
           ),
-        ),
-        body: TabBarView(
-          children: [
-            _ContextTab(projectId: projectId),
-            _MeetingsTab(projectId: projectId),
-            _QaTab(projectId: projectId),
-          ],
         ),
       ),
     );
@@ -67,9 +159,9 @@ class _ContextTab extends ConsumerWidget {
     final AppTokens t = context.tokens;
 
     return ListView(
-      padding: const EdgeInsets.all(AppSpacing.lg),
+      padding: const EdgeInsets.fromLTRB(
+          AppSpacing.lg, AppSpacing.md, AppSpacing.lg, 160),
       children: [
-        // Descrizione manuale (SRD §6ter).
         GlassCard(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -80,7 +172,8 @@ class _ContextTab extends ConsumerWidget {
                 trailing: GhostButton(
                   label: 'Modifica',
                   icon: Icons.edit_outlined,
-                  onPressed: () => _editDescription(context, ref, project.value),
+                  onPressed: () =>
+                      _editDescription(context, ref, project.value),
                 ),
               ),
               const SizedBox(height: AppSpacing.sm),
@@ -89,8 +182,7 @@ class _ContextTab extends ConsumerWidget {
                     ? project.value!.description
                     : 'Aggiungi una descrizione del progetto: verrà usata dall\'AI come intento.',
                 style: AppTypography.bodyMedium.copyWith(
-                  color: (project.value?.description.trim().isNotEmpty ??
-                          false)
+                  color: (project.value?.description.trim().isNotEmpty ?? false)
                       ? t.colors.textSecondary
                       : t.colors.textTertiary,
                 ),
@@ -99,10 +191,9 @@ class _ContextTab extends ConsumerWidget {
           ),
         ),
         const SizedBox(height: AppSpacing.lg),
-        // Contesto AI (SRD §6ter, §8ter.2).
         context$.when(
-          loading: () =>
-              const Center(child: Padding(
+          loading: () => const Center(
+              child: Padding(
                   padding: EdgeInsets.all(AppSpacing.xl),
                   child: CircularProgressIndicator())),
           error: (Object e, _) => Text('Errore: $e'),
@@ -119,11 +210,8 @@ class _ContextTab extends ConsumerWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Markdown(
+                  MarkdownBody(
                     data: ctx.overviewMarkdown,
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    padding: EdgeInsets.zero,
                     styleSheet: MarkdownStyleSheet(
                       h1: AppTypography.titleLarge
                           .copyWith(color: t.colors.textPrimary),
@@ -180,63 +268,44 @@ class _ContextTab extends ConsumerWidget {
 // ------------------- Riunioni -------------------
 
 class _MeetingsTab extends ConsumerWidget {
-  const _MeetingsTab({required this.projectId});
+  const _MeetingsTab({required this.projectId, required this.onLoad});
   final String projectId;
+  final VoidCallback onLoad;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final AsyncValue<List<Meeting>> meetings =
         ref.watch(projectMeetingsProvider(projectId));
 
-    return Stack(
-      children: [
-        meetings.when(
-          loading: () => const Center(child: CircularProgressIndicator()),
-          error: (Object e, _) => Center(child: Text('Errore: $e')),
-          data: (List<Meeting> list) {
-            if (list.isEmpty) {
-              return EmptyState(
-                icon: Icons.event_note_outlined,
-                title: 'Nessuna riunione',
-                message:
-                    'Carica la prima riunione: una o più registrazioni verranno trascritte e analizzate.',
-                action: PrimaryButton(
-                  label: 'Carica riunione',
-                  icon: Icons.upload_file,
-                  expand: false,
-                  onPressed: () => _newMeeting(context),
-                ),
-              );
-            }
-            return ListView.separated(
-              padding: const EdgeInsets.fromLTRB(
-                  AppSpacing.lg, AppSpacing.md, AppSpacing.lg, 96),
-              itemCount: list.length,
-              separatorBuilder: (_, _) =>
-                  const SizedBox(height: AppSpacing.md),
-              itemBuilder: (BuildContext context, int i) =>
-                  _MeetingCard(meeting: list[i]),
-            );
-          },
-        ),
-        Positioned(
-          right: AppSpacing.lg,
-          bottom: AppSpacing.lg,
-          child: FloatingActionButton.extended(
-            onPressed: () => _newMeeting(context),
-            icon: const Icon(Icons.upload_file),
-            label: const Text('Carica riunione'),
-          ),
-        ),
-      ],
+    return meetings.when(
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (Object e, _) => Center(child: Text('Errore: $e')),
+      data: (List<Meeting> list) {
+        if (list.isEmpty) {
+          return EmptyState(
+            icon: Icons.event_note_outlined,
+            title: 'Nessuna riunione',
+            message:
+                'Carica la prima riunione (audio o testo): verrà trascritta e analizzata.',
+            action: PrimaryButton(
+              label: 'Carica riunione',
+              icon: Icons.upload_file,
+              expand: false,
+              onPressed: onLoad,
+            ),
+          );
+        }
+        return ListView.separated(
+          padding: const EdgeInsets.fromLTRB(
+              AppSpacing.lg, AppSpacing.md, AppSpacing.lg, 160),
+          itemCount: list.length,
+          separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.md),
+          itemBuilder: (BuildContext context, int i) =>
+              _MeetingCard(meeting: list[i]),
+        );
+      },
     );
   }
-
-  void _newMeeting(BuildContext context) => Navigator.of(context).push(
-        MaterialPageRoute<void>(
-          builder: (_) => NewMeetingScreen(presetProjectId: projectId),
-        ),
-      );
 }
 
 class _MeetingCard extends StatelessWidget {
@@ -279,86 +348,103 @@ class _MeetingCard extends StatelessWidget {
   }
 }
 
-// ------------------- Q&A -------------------
+// ------------------- Q&A (popup) -------------------
 
-class _QaTab extends ConsumerWidget {
-  const _QaTab({required this.projectId});
+/// Contenuto del popup "Chiedi al progetto": nuova domanda + cronologia.
+class _QaHub extends ConsumerWidget {
+  const _QaHub({required this.projectId});
   final String projectId;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final AppTokens t = context.tokens;
     final AsyncValue<List<ProjectQAThread>> threads =
         ref.watch(qaThreadsProvider(projectId));
 
-    return Stack(
-      children: [
-        threads.when(
-          loading: () => const Center(child: CircularProgressIndicator()),
-          error: (Object e, _) => Center(child: Text('Errore: $e')),
-          data: (List<ProjectQAThread> list) {
-            if (list.isEmpty) {
-              return EmptyState(
-                icon: Icons.forum_outlined,
-                title: 'Chiedi al progetto',
-                message:
-                    'Poni domande in linguaggio naturale sull\'intero progetto. Le risposte si basano sui recap delle riunioni.',
-                action: PrimaryButton(
-                  label: 'Nuova domanda',
-                  icon: Icons.add_comment_outlined,
-                  expand: false,
-                  onPressed: () => _newThread(context, ref),
+    return DraggableScrollableSheet(
+      initialChildSize: 0.7,
+      minChildSize: 0.4,
+      maxChildSize: 0.95,
+      expand: false,
+      builder: (BuildContext context, ScrollController scroll) => GlassContainer(
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(AppRadii.xl)),
+        padding: const EdgeInsets.fromLTRB(
+            AppSpacing.xl, AppSpacing.md, AppSpacing.xl, AppSpacing.lg),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                margin: const EdgeInsets.only(bottom: AppSpacing.lg),
+                decoration: BoxDecoration(
+                  color: t.colors.textTertiary.withValues(alpha: 0.4),
+                  borderRadius: AppRadii.rPill,
                 ),
-              );
-            }
-            return ListView.separated(
-              padding: const EdgeInsets.fromLTRB(
-                  AppSpacing.lg, AppSpacing.md, AppSpacing.lg, 96),
-              itemCount: list.length,
-              separatorBuilder: (_, _) =>
-                  const SizedBox(height: AppSpacing.md),
-              itemBuilder: (BuildContext context, int i) {
-                final ProjectQAThread thread = list[i];
-                final AppTokens t = context.tokens;
-                return GlassCard(
-                  onTap: () => Navigator.of(context).push(
-                    MaterialPageRoute<void>(
-                      builder: (_) => QaThreadScreen(
-                        projectId: projectId,
-                        threadId: thread.id,
-                        title: thread.title,
+              ),
+            ),
+            const SectionHeader(
+                title: 'Chiedi al progetto', eyebrow: 'Second brain'),
+            const SizedBox(height: AppSpacing.md),
+            PrimaryButton(
+              label: 'Nuova domanda',
+              icon: Icons.add_comment_outlined,
+              onPressed: () => _newThread(context, ref),
+            ),
+            const SizedBox(height: AppSpacing.lg),
+            Expanded(
+              child: threads.when(
+                loading: () =>
+                    const Center(child: CircularProgressIndicator()),
+                error: (Object e, _) => Center(child: Text('Errore: $e')),
+                data: (List<ProjectQAThread> list) {
+                  if (list.isEmpty) {
+                    return Center(
+                      child: Text(
+                        'Nessuna domanda ancora. Le risposte si basano sui recap delle riunioni.',
+                        textAlign: TextAlign.center,
+                        style: AppTypography.bodyMedium
+                            .copyWith(color: t.colors.textTertiary),
                       ),
-                    ),
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(Icons.chat_bubble_outline,
-                          color: t.colors.accentPrimary),
-                      const SizedBox(width: AppSpacing.md),
-                      Expanded(
-                        child: Text(thread.title,
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            style: AppTypography.bodyLarge
-                                .copyWith(color: t.colors.textPrimary)),
-                      ),
-                      Icon(Icons.chevron_right, color: t.colors.textTertiary),
-                    ],
-                  ),
-                );
-              },
-            );
-          },
+                    );
+                  }
+                  return ListView.separated(
+                    controller: scroll,
+                    itemCount: list.length,
+                    separatorBuilder: (_, _) =>
+                        const SizedBox(height: AppSpacing.sm),
+                    itemBuilder: (BuildContext context, int i) {
+                      final ProjectQAThread thread = list[i];
+                      return GlassCard(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: AppSpacing.lg, vertical: AppSpacing.md),
+                        onTap: () => _openThread(context, thread),
+                        child: Row(
+                          children: [
+                            Icon(Icons.chat_bubble_outline,
+                                size: 18, color: t.colors.accentPrimary),
+                            const SizedBox(width: AppSpacing.md),
+                            Expanded(
+                              child: Text(thread.title,
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: AppTypography.bodyLarge
+                                      .copyWith(color: t.colors.textPrimary)),
+                            ),
+                            Icon(Icons.chevron_right,
+                                color: t.colors.textTertiary),
+                          ],
+                        ),
+                      );
+                    },
+                  );
+                },
+              ),
+            ),
+          ],
         ),
-        Positioned(
-          right: AppSpacing.lg,
-          bottom: AppSpacing.lg,
-          child: FloatingActionButton.extended(
-            onPressed: () => _newThread(context, ref),
-            icon: const Icon(Icons.add_comment_outlined),
-            label: const Text('Nuova domanda'),
-          ),
-        ),
-      ],
+      ),
     );
   }
 
@@ -367,7 +453,21 @@ class _QaTab extends ConsumerWidget {
         .read(qaRepositoryProvider)
         .createThread(projectId: projectId, title: 'Nuova domanda');
     if (!context.mounted) return;
+    Navigator.of(context).pop(); // chiude il popup
     await Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => QaThreadScreen(
+          projectId: projectId,
+          threadId: thread.id,
+          title: thread.title,
+        ),
+      ),
+    );
+  }
+
+  void _openThread(BuildContext context, ProjectQAThread thread) {
+    Navigator.of(context).pop();
+    Navigator.of(context).push(
       MaterialPageRoute<void>(
         builder: (_) => QaThreadScreen(
           projectId: projectId,

@@ -5,22 +5,21 @@ import '../../app/theme/app_dimens.dart';
 import '../../app/theme/app_tokens.dart';
 import '../../app/theme/app_typography.dart';
 import '../../core/utils/formatters.dart';
-import '../../domain/entities/meeting_status.dart';
 import '../../domain/entities/usage_record.dart';
 import '../providers/data_providers.dart';
 import '../widgets/widgets.dart';
 
-/// Dashboard consumi (SRD §9, §10 schermata 7). Stima, non fattura reale.
+/// Consumi (SRD §9): quanto hai speso questo mese e in totale, con il dettaglio
+/// per modello. Semplice, senza fronzoli.
 class UsageScreen extends ConsumerWidget {
   const UsageScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final AsyncValue<List<UsageRecord>> usage = ref.watch(usageProvider);
-    final AppTokens t = context.tokens;
 
     return AppScaffold(
-      appBar: AppBar(title: const Text('Consumi')),
+      appBar: AppBar(title: const Text('Spesa')),
       body: usage.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (Object e, _) => Center(child: Text('Errore: $e')),
@@ -33,12 +32,13 @@ class UsageScreen extends ConsumerWidget {
           final double allTotal = records.fold<double>(
               0, (double s, UsageRecord r) => s + r.estimatedCostUsd);
 
-          final Map<UsageOperationType, double> byType =
-              <UsageOperationType, double>{};
+          // Dettaglio per modello (Whisper incluso come "whisper-1").
+          final Map<String, double> byModel = <String, double>{};
           for (final UsageRecord r in records) {
-            byType[r.operationType] =
-                (byType[r.operationType] ?? 0) + r.estimatedCostUsd;
+            byModel[r.model] = (byModel[r.model] ?? 0) + r.estimatedCostUsd;
           }
+          final List<MapEntry<String, double>> models = byModel.entries.toList()
+            ..sort((a, b) => b.value.compareTo(a.value));
 
           return ListView(
             padding: const EdgeInsets.all(AppSpacing.lg),
@@ -47,52 +47,36 @@ class UsageScreen extends ConsumerWidget {
                 children: [
                   Expanded(
                     child: _TotalCard(
-                      label: 'Mese corrente',
-                      value: monthTotal,
-                      highlight: true,
-                    ),
+                        label: 'Questo mese',
+                        value: monthTotal,
+                        highlight: true),
                   ),
                   const SizedBox(width: AppSpacing.md),
                   Expanded(
-                    child: _TotalCard(label: 'Totale', value: allTotal),
-                  ),
+                      child: _TotalCard(label: 'Totale', value: allTotal)),
                 ],
               ),
-              const SizedBox(height: AppSpacing.lg),
-              GlassCard(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    const SectionHeader(
-                        title: 'Dettaglio per operazione', eyebrow: 'Breakdown'),
-                    const SizedBox(height: AppSpacing.md),
-                    _BreakdownRow(
-                        label: 'Trascrizione',
-                        value: byType[UsageOperationType.transcription] ?? 0),
-                    _BreakdownRow(
-                        label: 'Analisi',
-                        value: byType[UsageOperationType.analysis] ?? 0),
-                    _BreakdownRow(
-                        label: 'Aggiornamento contesto',
-                        value: byType[UsageOperationType.contextUpdate] ?? 0),
-                    _BreakdownRow(
-                        label: 'Q&A',
-                        value: byType[UsageOperationType.qa] ?? 0),
-                  ],
+              if (models.isNotEmpty) ...[
+                const SizedBox(height: AppSpacing.lg),
+                GlassCard(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      const SectionHeader(
+                          title: 'Per modello', eyebrow: 'Dettaglio'),
+                      const SizedBox(height: AppSpacing.md),
+                      for (final MapEntry<String, double> m in models)
+                        _ModelRow(model: m.key, value: m.value),
+                    ],
+                  ),
                 ),
-              ),
-              const SizedBox(height: AppSpacing.lg),
-              Text(
-                'I valori sono una stima basata sulle tariffe impostate, non la fattura reale OpenAI.',
-                style: AppTypography.caption
-                    .copyWith(color: t.colors.textTertiary),
-              ),
+              ],
               if (records.isEmpty) ...[
                 const SizedBox(height: AppSpacing.xl),
                 const EmptyState(
                   icon: Icons.savings_outlined,
-                  title: 'Nessun consumo ancora',
-                  message: 'Qui vedrai la stima dei costi delle API OpenAI.',
+                  title: 'Ancora nessuna spesa',
+                  message: 'Qui vedrai quanto spendi in API OpenAI.',
                 ),
               ],
             ],
@@ -139,9 +123,9 @@ class _TotalCard extends StatelessWidget {
   }
 }
 
-class _BreakdownRow extends StatelessWidget {
-  const _BreakdownRow({required this.label, required this.value});
-  final String label;
+class _ModelRow extends StatelessWidget {
+  const _ModelRow({required this.model, required this.value});
+  final String model;
   final double value;
 
   @override
@@ -152,7 +136,7 @@ class _BreakdownRow extends StatelessWidget {
       child: Row(
         children: [
           Expanded(
-            child: Text(label,
+            child: Text(model,
                 style: AppTypography.bodyLarge
                     .copyWith(color: t.colors.textSecondary)),
           ),

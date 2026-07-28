@@ -72,7 +72,7 @@ class _BaseButton extends StatelessWidget {
           child: DecoratedBox(
             decoration: BoxDecoration(
               gradient: t.colors.accentGradient,
-              borderRadius: AppRadii.rMd,
+              borderRadius: AppRadii.rPill,
               boxShadow: disabled ? null : t.glass.shadows,
             ),
             child: _tappable(context, content, Colors.white, disabled),
@@ -84,7 +84,7 @@ class _BaseButton extends StatelessWidget {
           child: DecoratedBox(
             decoration: BoxDecoration(
               color: t.colors.accentPrimary.withValues(alpha: 0.12),
-              borderRadius: AppRadii.rMd,
+              borderRadius: AppRadii.rPill,
               border: Border.all(
                 color: t.colors.accentPrimary.withValues(alpha: 0.35),
               ),
@@ -108,10 +108,10 @@ class _BaseButton extends StatelessWidget {
   ) {
     return Material(
       color: Colors.transparent,
-      borderRadius: AppRadii.rMd,
+      borderRadius: AppRadii.rPill,
       child: InkWell(
         onTap: disabled ? null : onPressed,
-        borderRadius: AppRadii.rMd,
+        borderRadius: AppRadii.rPill,
         child: Padding(
           padding: const EdgeInsets.symmetric(
             horizontal: AppSpacing.lg,
