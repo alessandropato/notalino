@@ -1,39 +1,60 @@
-<svg width="1024" height="1024" viewBox="0 0 1024 1024" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <!-- Notalino — bolla di dialogo con waveform, documento e scintilla.
-       Mono-colore (currentColor tramite stroke) così è ricolorabile in-app. -->
-  <g stroke="#1E3A5F" stroke-width="26" stroke-linecap="round" stroke-linejoin="round" fill="none">
-    <!-- Bolla di dialogo con codina in basso a sinistra -->
-    <path d="M 470 686
-             A 232 232 0 1 0 300 566
-             L 372 760
-             Z" />
-    <!-- Waveform audio -->
-    <path d="M 352 512
-             L 378 512
-             L 396 452
-             L 414 574
-             L 432 420
-             L 450 588
-             L 468 462
-             L 486 548
-             L 504 500
-             L 524 512" stroke-width="22" />
-    <!-- Documento con angolo piegato -->
-    <path d="M 566 452
-             L 626 452
-             L 668 494
-             L 668 578
-             L 566 578
-             Z" stroke-width="22" />
-    <path d="M 626 452 L 626 494 L 668 494" stroke-width="20" />
-    <path d="M 590 520 L 644 520" stroke-width="18" />
-    <path d="M 590 552 L 630 552" stroke-width="18" />
-    <!-- Scintilla (4 punte) in alto a destra -->
-    <path d="M 726 300
-             C 730 344 742 356 786 360
-             C 742 364 730 376 726 420
-             C 722 376 710 364 666 360
-             C 710 356 722 344 726 300 Z"
-          fill="#1E3A5F" stroke-width="8" />
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Logo Notalino: fumetto + waveform + documento + scintilla AI.
+       Blu del brand (accentPrimary #4C8DFF). Mono-colore: l'AppLogo widget
+       lo ricolora dinamicamente via ColorFilter (es. bianco sui pulsanti). -->
+  <g stroke="#4C8DFF" fill="none" stroke-linecap="round" stroke-linejoin="round">
+
+    <!-- Contorno Fumetto -->
+    <path stroke-width="16" d="
+      M 330 115
+      A 152 152 0 1 0 176 372
+      L 176 426
+      L 222 396
+      A 152 152 0 0 0 376 168
+    " />
+
+    <!-- Sparkle AI a 4 Punte -->
+    <path stroke="none" fill="#4C8DFF" d="
+      M 366 132
+      Q 366 112 386 112
+      Q 366 112 366 92
+      Q 366 112 346 112
+      Q 366 112 366 132 Z
+    "/>
+
+    <!-- Onda Sonora -->
+    <path stroke-width="14" d="
+      M 152 250
+      H 176
+      L 188 232
+      L 199 270
+      L 213 184
+      L 227 316
+      L 241 209
+      L 253 276
+      L 265 236
+      L 275 250
+      H 287
+    " />
+
+    <!-- Icona Documento -->
+    <path stroke-width="14" d="
+      M 287 199
+      H 317
+      L 339 221
+      V 289
+      A 12 12 0 0 1 327 301
+      H 299
+      A 12 12 0 0 1 287 289
+      Z
+    " />
+
+    <!-- Piega Documento -->
+    <path stroke-width="14" d="M 317 199 V 221 H 339" />
+
+    <!-- Righe del Documento -->
+    <line x1="303" y1="256" x2="323" y2="256" stroke-width="12" />
+    <line x1="303" y1="276" x2="317" y2="276" stroke-width="12" />
+
   </g>
 </svg>
