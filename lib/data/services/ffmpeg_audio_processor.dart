@@ -90,8 +90,19 @@ class FfmpegAudioProcessor implements AudioProcessor {
     );
   }
 
+  /// Tetto difensivo: anche una registrazione molto lunga non deve poter
+  /// bloccare ffmpeg indefinitamente all'interno di una sessione viva.
+  static const Duration _hardTimeout = Duration(minutes: 15);
+
   Future<void> _run(String command, String label) async {
-    final session = await FFmpegKit.execute(command);
+    final session = await FFmpegKit.execute(command).timeout(
+      _hardTimeout,
+      onTimeout: () {
+        throw AudioProcessingException(
+          'Timeout ffmpeg durante $label (oltre ${_hardTimeout.inMinutes} minuti).',
+        );
+      },
+    );
     final ReturnCode? rc = await session.getReturnCode();
     if (!ReturnCode.isSuccess(rc)) {
       final String? trace = await session.getFailStackTrace();

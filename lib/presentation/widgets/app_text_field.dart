@@ -19,6 +19,10 @@ class AppTextField extends StatefulWidget {
     this.enabled = true,
     this.prefixIcon,
     this.errorText,
+    this.focusNode,
+    this.autofocus = false,
+    this.textInputAction,
+    this.onSubmitted,
   });
 
   final TextEditingController? controller;
@@ -33,6 +37,10 @@ class AppTextField extends StatefulWidget {
   final bool enabled;
   final IconData? prefixIcon;
   final String? errorText;
+  final FocusNode? focusNode;
+  final bool autofocus;
+  final TextInputAction? textInputAction;
+  final ValueChanged<String>? onSubmitted;
 
   @override
   State<AppTextField> createState() => _AppTextFieldState();
@@ -66,10 +74,14 @@ class _AppTextFieldState extends State<AppTextField> {
           ),
           child: TextField(
             controller: widget.controller,
+            focusNode: widget.focusNode,
+            autofocus: widget.autofocus,
             obscureText: _obscured,
             maxLines: widget.obscure ? 1 : widget.maxLines,
             keyboardType: widget.keyboardType,
+            textInputAction: widget.textInputAction,
             onChanged: widget.onChanged,
+            onSubmitted: widget.onSubmitted,
             enabled: widget.enabled,
             style: AppTypography.bodyLarge.copyWith(color: t.colors.textPrimary),
             decoration: InputDecoration(

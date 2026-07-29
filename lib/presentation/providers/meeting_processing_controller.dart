@@ -1,5 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../domain/entities/meeting.dart';
+import '../../domain/entities/meeting_status.dart';
 import '../../domain/usecases/transcribe_meeting.dart';
 import 'core_providers.dart';
 
@@ -35,14 +37,48 @@ class MeetingProcessingController extends Notifier<ProcessingState> {
 
   final String meetingId;
 
+  static const String _orphanedMessage =
+      'L\'elaborazione è stata interrotta (probabilmente l\'app è stata chiusa mentre era in corso). Riprova.';
+
   @override
-  ProcessingState build() => const ProcessingState();
+  ProcessingState build() {
+    // `build()` gira una sola volta per meetingId per sessione dell'app, alla
+    // PRIMA volta che questo controller viene letto in questa sessione. Se in
+    // quel momento il DB dice già transcribing/analyzing, non può esserci
+    // un'elaborazione realmente in corso in questa sessione (altrimenti
+    // sarebbe stata avviata da `process()`, che passa da qui prima):
+    // significa che una sessione precedente è stata interrotta (es. l'OS ha
+    // terminato l'app in background) lasciando la riunione bloccata nel DB.
+    // La riconciliamo subito in modo che l'utente veda un errore riprovabile
+    // invece di uno stato "in corso" che non finirà mai (SRD §6.5).
+    Future<void>.microtask(_reconcileOrphanedState);
+    return const ProcessingState();
+  }
+
+  Future<void> _reconcileOrphanedState() async {
+    final meetingRepo = ref.read(meetingRepositoryProvider);
+    final Meeting? meeting = await meetingRepo.getMeeting(meetingId);
+    if (meeting == null) return;
+    if (meeting.status != MeetingStatus.transcribing &&
+        meeting.status != MeetingStatus.analyzing) {
+      return;
+    }
+    await meetingRepo.updateMeeting(meeting.copyWith(
+      status: MeetingStatus.failed,
+      errorMessage: _orphanedMessage,
+    ));
+    state = const ProcessingState(
+      phase: ProcessingPhase.error,
+      errorMessage: _orphanedMessage,
+    );
+  }
 
   Future<void> process() async {
     try {
       state = const ProcessingState(
         phase: ProcessingPhase.transcribing,
-        label: 'Preparazione trascrizione…',
+        label:
+            'Preparazione audio… (per registrazioni lunghe può richiedere qualche minuto)',
       );
 
       await ref.read(transcribeMeetingProvider).call(

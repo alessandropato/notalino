@@ -34,13 +34,16 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final AsyncValue<Project?> project =
-        ref.watch(projectProvider(widget.projectId));
+    final AsyncValue<Project?> project = ref.watch(
+      projectProvider(widget.projectId),
+    );
 
     return AppScaffold(
       appBar: AppBar(
-        title: Text(project.value?.name ?? 'Progetto',
-            overflow: TextOverflow.ellipsis),
+        title: Text(
+          project.value?.name ?? 'Progetto',
+          overflow: TextOverflow.ellipsis,
+        ),
         actions: [
           IconButton(
             tooltip: 'Carica riunione',
@@ -78,8 +81,16 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
                   SegmentedToggle<int>(
                     value: _index,
                     segments: const [
-                      ToggleSegment(value: 0, label: 'Contesto', icon: Icons.auto_awesome_outlined),
-                      ToggleSegment(value: 1, label: 'Riunioni', icon: Icons.event_note_outlined),
+                      ToggleSegment(
+                        value: 0,
+                        label: 'Contesto',
+                        icon: Icons.auto_awesome_outlined,
+                      ),
+                      ToggleSegment(
+                        value: 1,
+                        label: 'Riunioni',
+                        icon: Icons.event_note_outlined,
+                      ),
                     ],
                     onChanged: (i) => setState(() => _index = i),
                   ),
@@ -93,18 +104,18 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
   }
 
   void _loadMeeting() => Navigator.of(context).push(
-        MaterialPageRoute<void>(
-          builder: (_) => NewMeetingScreen(presetProjectId: widget.projectId),
-        ),
-      );
+    MaterialPageRoute<void>(
+      builder: (_) => NewMeetingScreen(presetProjectId: widget.projectId),
+    ),
+  );
 
   void _openQa() => showModalBottomSheet<void>(
-        context: context,
-        isScrollControlled: true,
-        backgroundColor: Colors.transparent,
-        barrierColor: context.tokens.colors.overlayTint.withValues(alpha: 0.4),
-        builder: (_) => _QaHub(projectId: widget.projectId),
-      );
+    context: context,
+    isScrollControlled: true,
+    backgroundColor: Colors.transparent,
+    barrierColor: context.tokens.colors.overlayTint.withValues(alpha: 0.4),
+    builder: (_) => _QaHub(projectId: widget.projectId),
+  );
 }
 
 /// Pulsante flottante circolare "Chiedi al progetto" — icona chat moderna.
@@ -145,14 +156,19 @@ class _ContextTab extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final AsyncValue<ProjectContext?> context$ =
-        ref.watch(projectContextProvider(projectId));
+    final AsyncValue<ProjectContext?> context$ = ref.watch(
+      projectContextProvider(projectId),
+    );
     final AsyncValue<Project?> project = ref.watch(projectProvider(projectId));
     final AppTokens t = context.tokens;
 
     return ListView(
       padding: const EdgeInsets.fromLTRB(
-          AppSpacing.lg, AppSpacing.md, AppSpacing.lg, 160),
+        AppSpacing.lg,
+        AppSpacing.md,
+        AppSpacing.lg,
+        160,
+      ),
       children: [
         GlassCard(
           onTap: () => _editDescription(context, ref, project.value),
@@ -161,8 +177,11 @@ class _ContextTab extends ConsumerWidget {
             children: [
               SectionHeader(
                 title: 'Contesto',
-                trailing: Icon(Icons.edit_outlined,
-                    size: 18, color: t.colors.accentPrimary),
+                trailing: Icon(
+                  Icons.edit_outlined,
+                  size: 18,
+                  color: t.colors.accentPrimary,
+                ),
               ),
               const SizedBox(height: AppSpacing.sm),
               Text(
@@ -181,9 +200,11 @@ class _ContextTab extends ConsumerWidget {
         const SizedBox(height: AppSpacing.lg),
         context$.when(
           loading: () => const Center(
-              child: Padding(
-                  padding: EdgeInsets.all(AppSpacing.xl),
-                  child: CircularProgressIndicator())),
+            child: Padding(
+              padding: EdgeInsets.all(AppSpacing.xl),
+              child: CircularProgressIndicator(),
+            ),
+          ),
           error: (Object e, _) => Text('Errore: $e'),
           data: (ProjectContext? ctx) {
             if (ctx == null) {
@@ -201,20 +222,27 @@ class _ContextTab extends ConsumerWidget {
                   MarkdownBody(
                     data: ctx.overviewMarkdown,
                     styleSheet: MarkdownStyleSheet(
-                      h1: AppTypography.titleLarge
-                          .copyWith(color: t.colors.textPrimary),
-                      h2: AppTypography.titleMedium
-                          .copyWith(color: t.colors.textPrimary),
-                      p: AppTypography.bodyLarge
-                          .copyWith(color: t.colors.textSecondary),
-                      listBullet: AppTypography.bodyLarge
-                          .copyWith(color: t.colors.textSecondary),
+                      h1: AppTypography.titleLarge.copyWith(
+                        color: t.colors.textPrimary,
+                      ),
+                      h2: AppTypography.titleMedium.copyWith(
+                        color: t.colors.textPrimary,
+                      ),
+                      p: AppTypography.bodyLarge.copyWith(
+                        color: t.colors.textSecondary,
+                      ),
+                      listBullet: AppTypography.bodyLarge.copyWith(
+                        color: t.colors.textSecondary,
+                      ),
                     ),
                   ),
                   const SizedBox(height: AppSpacing.sm),
-                  Text('Aggiornato il ${Formatters.date(ctx.updatedAt)}',
-                      style: AppTypography.caption
-                          .copyWith(color: t.colors.textTertiary)),
+                  Text(
+                    'Aggiornato il ${Formatters.date(ctx.updatedAt)}',
+                    style: AppTypography.caption.copyWith(
+                      color: t.colors.textTertiary,
+                    ),
+                  ),
                 ],
               ),
             );
@@ -225,31 +253,88 @@ class _ContextTab extends ConsumerWidget {
   }
 
   Future<void> _editDescription(
-      BuildContext context, WidgetRef ref, Project? project) async {
+    BuildContext context,
+    WidgetRef ref,
+    Project? project,
+  ) async {
     if (project == null) return;
-    final TextEditingController ctrl =
-        TextEditingController(text: project.description);
-    final bool? ok = await AppBottomSheet.show<bool>(
+    final TextEditingController ctrl = TextEditingController(
+      text: project.description,
+    );
+    bool saving = false;
+    String? error;
+
+    await AppBottomSheet.show<void>(
       context: context,
-      builder: (BuildContext ctx) => Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          const SectionHeader(title: 'Contesto'),
-          const SizedBox(height: AppSpacing.lg),
-          AppTextField(controller: ctrl, maxLines: 5, hint: 'Di cosa tratta…'),
-          const SizedBox(height: AppSpacing.xl),
-          PrimaryButton(
-              label: 'Salva', onPressed: () => Navigator.of(ctx).pop(true)),
-        ],
+      builder: (BuildContext ctx) => StatefulBuilder(
+        builder: (BuildContext ctx, StateSetter setSheetState) => Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const SectionHeader(title: 'Contesto'),
+            const SizedBox(height: AppSpacing.sm),
+            Text(
+              'L\'AI lo integra nella scheda viva del progetto (non resta un testo a parte).',
+              style: AppTypography.caption.copyWith(
+                color: context.tokens.colors.textTertiary,
+              ),
+            ),
+            const SizedBox(height: AppSpacing.lg),
+            AppTextField(
+              controller: ctrl,
+              maxLines: 5,
+              hint: 'Di cosa tratta…',
+              enabled: !saving,
+            ),
+            if (error != null) ...[
+              const SizedBox(height: AppSpacing.sm),
+              Text(
+                error!,
+                style: AppTypography.caption.copyWith(
+                  color: context.tokens.colors.error,
+                ),
+              ),
+            ],
+            const SizedBox(height: AppSpacing.xl),
+            PrimaryButton(
+              label: 'Salva',
+              loading: saving,
+              onPressed: saving
+                  ? null
+                  : () async {
+                      setSheetState(() {
+                        saving = true;
+                        error = null;
+                      });
+                      try {
+                        await ref
+                            .read(projectRepositoryProvider)
+                            .updateProject(
+                              project.copyWith(description: ctrl.text.trim()),
+                            );
+                        ref.invalidate(projectProvider(projectId));
+                        // Integra il nuovo contesto nella scheda viva del
+                        // progetto via AI (se ci sono già riunioni da cui
+                        // partire); altrimenti la description resta come
+                        // materiale grezzo finché non arriva la prima.
+                        await ref
+                            .read(updateProjectContextProvider)
+                            .call(projectId);
+                        if (ctx.mounted) Navigator.of(ctx).pop();
+                      } catch (e) {
+                        setSheetState(() {
+                          saving = false;
+                          error =
+                              'Salvato, ma l\'integrazione AI nel contesto è fallita: '
+                              '${e.toString().replaceFirst("Exception: ", "")}';
+                        });
+                      }
+                    },
+            ),
+          ],
+        ),
       ),
     );
-    if (ok == true) {
-      await ref
-          .read(projectRepositoryProvider)
-          .updateProject(project.copyWith(description: ctrl.text.trim()));
-      ref.invalidate(projectProvider(projectId));
-    }
   }
 }
 
@@ -262,8 +347,9 @@ class _MeetingsTab extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final AsyncValue<List<Meeting>> meetings =
-        ref.watch(projectMeetingsProvider(projectId));
+    final AsyncValue<List<Meeting>> meetings = ref.watch(
+      projectMeetingsProvider(projectId),
+    );
 
     return meetings.when(
       loading: () => const Center(child: CircularProgressIndicator()),
@@ -285,7 +371,11 @@ class _MeetingsTab extends ConsumerWidget {
         }
         return ListView.separated(
           padding: const EdgeInsets.fromLTRB(
-              AppSpacing.lg, AppSpacing.md, AppSpacing.lg, 160),
+            AppSpacing.lg,
+            AppSpacing.md,
+            AppSpacing.lg,
+            160,
+          ),
           itemCount: list.length,
           separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.md),
           itemBuilder: (BuildContext context, int i) =>
@@ -303,8 +393,9 @@ class _MeetingCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final AppTokens t = context.tokens;
-    final ({String label, StatusTone tone}) status =
-        StatusUi.meeting(meeting.status);
+    final ({String label, StatusTone tone}) status = StatusUi.meeting(
+      meeting.status,
+    );
     return GlassCard(
       onTap: () => Navigator.of(context).push(
         MaterialPageRoute<void>(
@@ -317,15 +408,21 @@ class _MeetingCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(meeting.title,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: AppTypography.titleMedium
-                        .copyWith(color: t.colors.textPrimary)),
+                Text(
+                  meeting.title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTypography.titleMedium.copyWith(
+                    color: t.colors.textPrimary,
+                  ),
+                ),
                 const SizedBox(height: 4),
-                Text(Formatters.date(meeting.createdAt),
-                    style: AppTypography.caption
-                        .copyWith(color: t.colors.textTertiary)),
+                Text(
+                  Formatters.date(meeting.createdAt),
+                  style: AppTypography.caption.copyWith(
+                    color: t.colors.textTertiary,
+                  ),
+                ),
               ],
             ),
           ),
@@ -337,7 +434,6 @@ class _MeetingCard extends StatelessWidget {
 }
 
 // ------------------- Q&A (popup) -------------------
-
 
 /// Popup "Chiedi al progetto": la chat si apre direttamente qui dentro, senza
 /// navigare a un'altra schermata. Usa un'unica conversazione per progetto
@@ -352,6 +448,7 @@ class _QaHub extends ConsumerStatefulWidget {
 
 class _QaHubState extends ConsumerState<_QaHub> {
   final TextEditingController _ctrl = TextEditingController();
+  final FocusNode _focusNode = FocusNode();
   String? _threadId;
   bool _sending = false;
   String? _error;
@@ -361,8 +458,9 @@ class _QaHubState extends ConsumerState<_QaHub> {
     super.initState();
     // Riusa l'ultima conversazione del progetto, se esiste.
     Future<void>(() async {
-      final List<ProjectQAThread> threads =
-          await ref.read(qaRepositoryProvider).getThreads(widget.projectId);
+      final List<ProjectQAThread> threads = await ref
+          .read(qaRepositoryProvider)
+          .getThreads(widget.projectId);
       if (mounted && threads.isNotEmpty) {
         setState(() => _threadId = threads.first.id);
       }
@@ -372,6 +470,7 @@ class _QaHubState extends ConsumerState<_QaHub> {
   @override
   void dispose() {
     _ctrl.dispose();
+    _focusNode.dispose();
     super.dispose();
   }
 
@@ -382,104 +481,132 @@ class _QaHubState extends ConsumerState<_QaHub> {
         ? null
         : ref.watch(qaMessagesProvider(_threadId!));
 
-    return DraggableScrollableSheet(
-      initialChildSize: 0.75,
-      minChildSize: 0.4,
-      maxChildSize: 0.95,
-      expand: false,
-      builder: (BuildContext context, ScrollController scroll) => GlassContainer(
-        borderRadius:
-            const BorderRadius.vertical(top: Radius.circular(AppRadii.xl)),
-        padding: const EdgeInsets.fromLTRB(
-            AppSpacing.lg, AppSpacing.md, AppSpacing.lg, AppSpacing.md),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Center(
-              child: Container(
-                width: 40,
-                height: 4,
-                margin: const EdgeInsets.only(bottom: AppSpacing.md),
-                decoration: BoxDecoration(
-                  color: t.colors.textTertiary.withValues(alpha: 0.4),
-                  borderRadius: AppRadii.rPill,
-                ),
+    // Spinge l'intero foglio sopra la tastiera quando compare (altrimenti
+    // copre il composer): il DraggableScrollableSheet da solo non ne tiene
+    // conto, essendo dimensionato in frazioni dell'altezza disponibile.
+    return AnimatedPadding(
+      duration: AppMotion.fast,
+      padding: EdgeInsets.only(
+        bottom: MediaQuery.of(context).viewInsets.bottom,
+      ),
+      child: DraggableScrollableSheet(
+        initialChildSize: 0.75,
+        minChildSize: 0.4,
+        maxChildSize: 0.95,
+        expand: false,
+        builder: (BuildContext context, ScrollController scroll) =>
+            GlassContainer(
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(AppRadii.xl),
               ),
-            ),
-            Row(
-              children: [
-                const AppLogo(size: 22),
-                const SizedBox(width: AppSpacing.sm),
-                Expanded(
-                  child: Text('Chiedi al progetto',
-                      style: AppTypography.titleMedium
-                          .copyWith(color: t.colors.textPrimary)),
-                ),
-                if (_threadId != null)
-                  IconButton(
-                    tooltip: 'Nuova conversazione',
-                    icon: Icon(Icons.add_comment_outlined,
-                        color: t.colors.textSecondary),
-                    onPressed: () => setState(() {
-                      _threadId = null;
-                      _error = null;
-                    }),
-                  ),
-              ],
-            ),
-            const SizedBox(height: AppSpacing.sm),
-            Expanded(
-              child: (messages == null)
-                  ? _emptyPrompt(t)
-                  : messages.when(
-                      loading: () =>
-                          const Center(child: CircularProgressIndicator()),
-                      error: (Object e, _) => Center(child: Text('Errore: $e')),
-                      data: (List<ProjectQAMessage> list) {
-                        if (list.isEmpty && !_sending) return _emptyPrompt(t);
-                        return ListView(
-                          controller: scroll,
-                          children: [
-                            for (final ProjectQAMessage m in list)
-                              _bubble(t, m),
-                            if (_sending) _typing(t),
-                          ],
-                        );
-                      },
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.lg,
+                AppSpacing.md,
+                AppSpacing.lg,
+                AppSpacing.md,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Center(
+                    child: Container(
+                      width: 40,
+                      height: 4,
+                      margin: const EdgeInsets.only(bottom: AppSpacing.md),
+                      decoration: BoxDecoration(
+                        color: t.colors.textTertiary.withValues(alpha: 0.4),
+                        borderRadius: AppRadii.rPill,
+                      ),
                     ),
-            ),
-            if (_error != null)
-              Padding(
-                padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-                child: Text(_error!,
-                    style:
-                        AppTypography.caption.copyWith(color: t.colors.error)),
+                  ),
+                  Row(
+                    children: [
+                      const AppLogo(size: 22),
+                      const SizedBox(width: AppSpacing.sm),
+                      Expanded(
+                        child: Text(
+                          'Chiedi al progetto',
+                          style: AppTypography.titleMedium.copyWith(
+                            color: t.colors.textPrimary,
+                          ),
+                        ),
+                      ),
+                      if (_threadId != null)
+                        IconButton(
+                          tooltip: 'Nuova conversazione',
+                          icon: Icon(
+                            Icons.add_comment_outlined,
+                            color: t.colors.textSecondary,
+                          ),
+                          onPressed: () => setState(() {
+                            _threadId = null;
+                            _error = null;
+                          }),
+                        ),
+                    ],
+                  ),
+                  const SizedBox(height: AppSpacing.sm),
+                  Expanded(
+                    child: (messages == null)
+                        ? _emptyPrompt(t)
+                        : messages.when(
+                            loading: () => const Center(
+                              child: CircularProgressIndicator(),
+                            ),
+                            error: (Object e, _) =>
+                                Center(child: Text('Errore: $e')),
+                            data: (List<ProjectQAMessage> list) {
+                              if (list.isEmpty && !_sending) {
+                                return _emptyPrompt(t);
+                              }
+                              return ListView(
+                                controller: scroll,
+                                children: [
+                                  for (final ProjectQAMessage m in list)
+                                    _bubble(t, m),
+                                  if (_sending) _typing(t),
+                                ],
+                              );
+                            },
+                          ),
+                  ),
+                  if (_error != null)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+                      child: Text(
+                        _error!,
+                        style: AppTypography.caption.copyWith(
+                          color: t.colors.error,
+                        ),
+                      ),
+                    ),
+                  _composer(t),
+                ],
               ),
-            _composer(t),
-          ],
-        ),
+            ),
       ),
     );
   }
 
   Widget _emptyPrompt(AppTokens t) => Center(
-        child: Padding(
-          padding: const EdgeInsets.all(AppSpacing.lg),
-          child: Text(
-            'Fai una domanda sul progetto.\nEs. "Cosa avevamo deciso sul budget?"',
-            textAlign: TextAlign.center,
-            style: AppTypography.bodyMedium.copyWith(color: t.colors.textTertiary),
-          ),
-        ),
-      );
+    child: Padding(
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      child: Text(
+        'Fai una domanda sul progetto.\nEs. "Cosa avevamo deciso sul budget?"',
+        textAlign: TextAlign.center,
+        style: AppTypography.bodyMedium.copyWith(color: t.colors.textTertiary),
+      ),
+    ),
+  );
 
   Widget _bubble(AppTokens t, ProjectQAMessage m) {
     final bool isUser = m.role == QaRole.user;
     return Align(
       alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
       child: Container(
-        constraints:
-            BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.78),
+        constraints: BoxConstraints(
+          maxWidth: MediaQuery.of(context).size.width * 0.78,
+        ),
         margin: const EdgeInsets.only(bottom: AppSpacing.md),
         padding: const EdgeInsets.all(AppSpacing.md),
         decoration: BoxDecoration(
@@ -493,81 +620,128 @@ class _QaHubState extends ConsumerState<_QaHub> {
           ),
           border: isUser ? null : Border.all(color: t.colors.glassBorder),
         ),
-        child: Text(m.content,
-            style: AppTypography.bodyLarge.copyWith(
-                color: isUser ? Colors.white : t.colors.textPrimary)),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              m.content,
+              style: AppTypography.bodyLarge.copyWith(
+                color: isUser ? Colors.white : t.colors.textPrimary,
+              ),
+            ),
+            if (m.citedMeetingIds.isNotEmpty) _citations(t, m.citedMeetingIds),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Riunioni citate nella risposta (SRD §8bis), in stile compatto.
+  Widget _citations(AppTokens t, List<String> meetingIds) {
+    final List<Meeting> all =
+        ref.watch(projectMeetingsProvider(widget.projectId)).value ??
+        const <Meeting>[];
+    final List<Meeting> cited = all
+        .where((Meeting m) => meetingIds.contains(m.id))
+        .toList();
+    if (cited.isEmpty) return const SizedBox.shrink();
+    return Padding(
+      padding: const EdgeInsets.only(top: AppSpacing.xs),
+      child: Wrap(
+        spacing: AppSpacing.xs,
+        runSpacing: 2,
+        children: [
+          for (final Meeting m in cited)
+            Text(
+              '↳ ${m.title}',
+              style: AppTypography.caption.copyWith(
+                fontSize: 10,
+                color: t.colors.textTertiary,
+              ),
+            ),
+        ],
       ),
     );
   }
 
   Widget _typing(AppTokens t) => Align(
-        alignment: Alignment.centerLeft,
-        child: Container(
-          margin: const EdgeInsets.only(bottom: AppSpacing.md),
-          padding: const EdgeInsets.all(AppSpacing.md),
-          decoration: BoxDecoration(
-            color: t.colors.surface.withValues(alpha: 0.6),
-            borderRadius: AppRadii.rLg,
-            border: Border.all(color: t.colors.glassBorder),
+    alignment: Alignment.centerLeft,
+    child: Container(
+      margin: const EdgeInsets.only(bottom: AppSpacing.md),
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: t.colors.surface.withValues(alpha: 0.6),
+        borderRadius: AppRadii.rLg,
+        border: Border.all(color: t.colors.glassBorder),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          SizedBox(
+            width: 16,
+            height: 16,
+            child: CircularProgressIndicator(
+              strokeWidth: 2,
+              valueColor: AlwaysStoppedAnimation<Color>(t.colors.accentPrimary),
+            ),
           ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              SizedBox(
-                  width: 16,
-                  height: 16,
-                  child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      valueColor: AlwaysStoppedAnimation<Color>(
-                          t.colors.accentPrimary))),
-              const SizedBox(width: AppSpacing.md),
-              Text('Sto consultando i recap…',
-                  style: AppTypography.bodyMedium
-                      .copyWith(color: t.colors.textSecondary)),
-            ],
+          const SizedBox(width: AppSpacing.md),
+          Text(
+            'Sto consultando i recap…',
+            style: AppTypography.bodyMedium.copyWith(
+              color: t.colors.textSecondary,
+            ),
           ),
-        ),
-      );
+        ],
+      ),
+    ),
+  );
 
   Widget _composer(AppTokens t) => SafeArea(
-        top: false,
-        child: Padding(
-          padding: EdgeInsets.only(
-              bottom: MediaQuery.of(context).viewInsets.bottom > 0
-                  ? AppSpacing.sm
-                  : 0),
-          child: Row(
-            children: [
-              Expanded(
-                child: AppTextField(
-                  controller: _ctrl,
-                  hint: 'Scrivi una domanda…',
-                  maxLines: 3,
-                ),
-              ),
-              const SizedBox(width: AppSpacing.md),
-              GestureDetector(
-                onTap: _sending ? null : _send,
-                child: Container(
-                  width: 48,
-                  height: 48,
-                  decoration: BoxDecoration(
-                      gradient: t.colors.accentGradient,
-                      shape: BoxShape.circle),
-                  child: _sending
-                      ? const Padding(
-                          padding: EdgeInsets.all(AppSpacing.md),
-                          child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              valueColor:
-                                  AlwaysStoppedAnimation<Color>(Colors.white)))
-                      : const Icon(Icons.arrow_upward, color: Colors.white),
-                ),
-              ),
-            ],
+    top: false,
+    child: Padding(
+      // Il gap verso la tastiera è già gestito dall'AnimatedPadding attorno
+      // all'intero foglio: qui basta un piccolo margine fisso.
+      padding: const EdgeInsets.only(top: AppSpacing.xs),
+      child: Row(
+        children: [
+          Expanded(
+            child: AppTextField(
+              controller: _ctrl,
+              focusNode: _focusNode,
+              autofocus: true,
+              hint: 'Scrivi una domanda…',
+              maxLines: 3,
+              textInputAction: TextInputAction.send,
+              onSubmitted: (_) => _send(),
+            ),
           ),
-        ),
-      );
+          const SizedBox(width: AppSpacing.md),
+          GestureDetector(
+            onTap: _sending ? null : _send,
+            child: Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                gradient: t.colors.accentGradient,
+                shape: BoxShape.circle,
+              ),
+              child: _sending
+                  ? const Padding(
+                      padding: EdgeInsets.all(AppSpacing.md),
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                      ),
+                    )
+                  : const Icon(Icons.arrow_upward, color: Colors.white),
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
 
   Future<void> _send() async {
     final String question = _ctrl.text.trim();
@@ -580,15 +754,18 @@ class _QaHubState extends ConsumerState<_QaHub> {
     try {
       // Crea la conversazione al primo messaggio.
       if (_threadId == null) {
-        final String title =
-            question.length > 60 ? '${question.substring(0, 60)}…' : question;
+        final String title = question.length > 60
+            ? '${question.substring(0, 60)}…'
+            : question;
         final ProjectQAThread thread = await ref
             .read(qaRepositoryProvider)
             .createThread(projectId: widget.projectId, title: title);
         if (!mounted) return;
         setState(() => _threadId = thread.id);
       }
-      await ref.read(askProjectProvider).ask(
+      await ref
+          .read(askProjectProvider)
+          .ask(
             threadId: _threadId!,
             projectId: widget.projectId,
             question: question,
