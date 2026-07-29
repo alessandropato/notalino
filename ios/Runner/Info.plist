@@ -4,6 +4,21 @@
 <dict>
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
+	<!-- Share Extension: gruppo condiviso e schema URL di reindirizzo usati da
+	     receive_sharing_intent per passare i file condivisi all'app host. -->
+	<key>AppGroupId</key>
+	<string>group.it.maketron.notalino</string>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>ShareMedia-$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+			</array>
+		</dict>
+	</array>
 	<!-- Export compliance: l'app usa solo crittografia esente (HTTPS verso
 	     OpenAI), quindi TestFlight/App Store non chiedono la dichiarazione a
 	     ogni upload. -->
