@@ -15,3 +15,4 @@ export 'section_header.dart';
 export 'segmented_toggle.dart';
 export 'status_badge.dart';
 export 'step_progress_indicator.dart';
+export 'voice_input_button.dart';

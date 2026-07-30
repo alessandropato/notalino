@@ -25,7 +25,15 @@ class OpenAiClient {
   Dio get dio => _dio;
 
   /// Header di autorizzazione; lancia [ApiKeyMissingException] se assente.
-  Future<Options> authorizedOptions({String? contentType}) async {
+  /// [receiveTimeout]/[sendTimeout] permettono di allungare i timeout per
+  /// singola chiamata (es. trascrizione di audio lunghi, che richiede più
+  /// tempo sia in upload sia in elaborazione lato server rispetto a una
+  /// chat completion).
+  Future<Options> authorizedOptions({
+    String? contentType,
+    Duration? receiveTimeout,
+    Duration? sendTimeout,
+  }) async {
     final String? key = await apiKeyProvider();
     if (key == null || key.trim().isEmpty) {
       throw const ApiKeyMissingException();
@@ -33,6 +41,8 @@ class OpenAiClient {
     return Options(
       headers: <String, dynamic>{'Authorization': 'Bearer ${key.trim()}'},
       contentType: contentType,
+      receiveTimeout: receiveTimeout,
+      sendTimeout: sendTimeout,
     );
   }
 
@@ -49,15 +59,24 @@ class OpenAiClient {
       );
     }
     final Object? data = e.response?.data;
-    String message = 'OpenAI ha risposto con un errore';
+    String? message;
     if (data is Map) {
       final Object? error = data['error'];
       if (error is Map && error['message'] is String) {
         message = error['message'] as String;
       }
     }
+    // Fallback: se il corpo non ha la forma attesa, mostra comunque qualcosa
+    // di concreto (status + corpo grezzo o messaggio dio) invece di un
+    // generico "errore" che non aiuta a capire cosa è successo (SRD §6.5).
+    message ??= data != null
+        ? 'HTTP $status: ${_truncate(data.toString())}'
+        : (e.message ?? 'Errore sconosciuto (HTTP $status)');
     throw OpenAiApiException(message, statusCode: status);
   }
+
+  static String _truncate(String s, [int max = 500]) =>
+      s.length <= max ? s : '${s.substring(0, max)}…';
 }
 
 /// Retry con backoff esponenziale per errori transitori (rete / 429 / 5xx).

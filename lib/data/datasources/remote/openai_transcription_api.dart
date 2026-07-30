@@ -12,9 +12,18 @@ class OpenAiTranscriptionApi {
 
   final OpenAiClient _client;
 
+  /// Timeout dedicati e più generosi di quelli di default (SRD §6.5): la
+  /// trascrizione di una riunione lunga richiede più tempo sia in upload sia
+  /// in elaborazione lato server rispetto a una chat completion.
+  static const Duration _receiveTimeout = Duration(minutes: 20);
+  static const Duration _sendTimeout = Duration(minutes: 10);
+
   Future<TranscriptionResult> transcribe(String filePath) async {
-    final Options options =
-        await _client.authorizedOptions(contentType: 'multipart/form-data');
+    final Options options = await _client.authorizedOptions(
+      contentType: 'multipart/form-data',
+      receiveTimeout: _receiveTimeout,
+      sendTimeout: _sendTimeout,
+    );
     final FormData form = FormData.fromMap(<String, dynamic>{
       'model': OpenAiConstants.transcriptionModel,
       'response_format': 'verbose_json', // include lingua e durata

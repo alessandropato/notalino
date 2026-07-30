@@ -171,27 +171,42 @@ class _ContextTab extends ConsumerWidget {
       ),
       children: [
         GlassCard(
-          onTap: () => _editDescription(context, ref, project.value),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
+          onTap: () => _addContextNote(context, ref, project.value),
+          child: Row(
             children: [
-              SectionHeader(
-                title: 'Contesto',
-                trailing: Icon(
-                  Icons.edit_outlined,
-                  size: 18,
+              Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  color: t.colors.accentPrimary.withValues(alpha: 0.12),
+                  borderRadius: AppRadii.rMd,
+                ),
+                child: Icon(
+                  Icons.add_rounded,
+                  size: 20,
                   color: t.colors.accentPrimary,
                 ),
               ),
-              const SizedBox(height: AppSpacing.sm),
-              Text(
-                (project.value?.description.trim().isNotEmpty ?? false)
-                    ? project.value!.description
-                    : 'Tocca per aggiungere informazioni sul progetto.',
-                style: AppTypography.bodyMedium.copyWith(
-                  color: (project.value?.description.trim().isNotEmpty ?? false)
-                      ? t.colors.textSecondary
-                      : t.colors.textTertiary,
+              const SizedBox(width: AppSpacing.md),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Aggiungi al contesto',
+                      style: AppTypography.bodyLarge.copyWith(
+                        color: t.colors.textPrimary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      'Nuovo cliente, obiettivo, aggiornamento…',
+                      style: AppTypography.caption.copyWith(
+                        color: t.colors.textTertiary,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
@@ -252,15 +267,17 @@ class _ContextTab extends ConsumerWidget {
     );
   }
 
-  Future<void> _editDescription(
+  /// Aggiunge una nota al contesto del progetto: il campo parte sempre vuoto
+  /// (non mostra le note già inserite) e, dopo il salvataggio, il testo viene
+  /// ACCODATO alla `description` esistente — mai sovrascritto — così la card
+  /// resta libera per aggiungerne subito un'altra.
+  Future<void> _addContextNote(
     BuildContext context,
     WidgetRef ref,
     Project? project,
   ) async {
     if (project == null) return;
-    final TextEditingController ctrl = TextEditingController(
-      text: project.description,
-    );
+    final TextEditingController ctrl = TextEditingController();
     bool saving = false;
     String? error;
 
@@ -271,10 +288,10 @@ class _ContextTab extends ConsumerWidget {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const SectionHeader(title: 'Contesto'),
+            const SectionHeader(title: 'Aggiungi al contesto'),
             const SizedBox(height: AppSpacing.sm),
             Text(
-              'L\'AI lo integra nella scheda viva del progetto (non resta un testo a parte).',
+              'L\'AI lo integra nella scheda viva del progetto.',
               style: AppTypography.caption.copyWith(
                 color: context.tokens.colors.textTertiary,
               ),
@@ -283,8 +300,24 @@ class _ContextTab extends ConsumerWidget {
             AppTextField(
               controller: ctrl,
               maxLines: 5,
-              hint: 'Di cosa tratta…',
+              hint: 'Di cosa tratta, a voce o a testo…',
               enabled: !saving,
+              autofocus: true,
+              onChanged: (_) => setSheetState(() {}),
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            Align(
+              alignment: Alignment.centerRight,
+              child: VoiceInputButton(
+                onTranscribed: (String text) {
+                  final String current = ctrl.text.trim();
+                  ctrl.text = current.isEmpty ? text : '$current $text';
+                  ctrl.selection = TextSelection.collapsed(
+                    offset: ctrl.text.length,
+                  );
+                  setSheetState(() {});
+                },
+              ),
             ),
             if (error != null) ...[
               const SizedBox(height: AppSpacing.sm),
@@ -297,9 +330,9 @@ class _ContextTab extends ConsumerWidget {
             ],
             const SizedBox(height: AppSpacing.xl),
             PrimaryButton(
-              label: 'Salva',
+              label: 'Aggiungi',
               loading: saving,
-              onPressed: saving
+              onPressed: saving || ctrl.text.trim().isEmpty
                   ? null
                   : () async {
                       setSheetState(() {
@@ -307,10 +340,15 @@ class _ContextTab extends ConsumerWidget {
                         error = null;
                       });
                       try {
+                        final String existing = project.description.trim();
+                        final String note = ctrl.text.trim();
+                        final String merged = existing.isEmpty
+                            ? note
+                            : '$existing\n\n$note';
                         await ref
                             .read(projectRepositoryProvider)
                             .updateProject(
-                              project.copyWith(description: ctrl.text.trim()),
+                              project.copyWith(description: merged),
                             );
                         ref.invalidate(projectProvider(projectId));
                         // Integra il nuovo contesto nella scheda viva del
@@ -573,10 +611,19 @@ class _QaHubState extends ConsumerState<_QaHub> {
                   if (_error != null)
                     Padding(
                       padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-                      child: Text(
-                        _error!,
-                        style: AppTypography.caption.copyWith(
-                          color: t.colors.error,
+                      child: GestureDetector(
+                        onTap: () => AppDialog.info(
+                          context: context,
+                          title: 'Dettaglio errore',
+                          message: _error!,
+                        ),
+                        child: Text(
+                          _error!,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: AppTypography.caption.copyWith(
+                            color: t.colors.error,
+                          ),
                         ),
                       ),
                     ),
@@ -716,6 +763,14 @@ class _QaHubState extends ConsumerState<_QaHub> {
               textInputAction: TextInputAction.send,
               onSubmitted: (_) => _send(),
             ),
+          ),
+          const SizedBox(width: AppSpacing.sm),
+          VoiceInputButton(
+            onTranscribed: (String text) => setState(() {
+              final String current = _ctrl.text.trim();
+              _ctrl.text = current.isEmpty ? text : '$current $text';
+              _ctrl.selection = TextSelection.collapsed(offset: _ctrl.text.length);
+            }),
           ),
           const SizedBox(width: AppSpacing.md),
           GestureDetector(

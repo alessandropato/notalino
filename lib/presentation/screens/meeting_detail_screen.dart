@@ -234,16 +234,34 @@ class _Banners extends ConsumerWidget {
     if (meeting.status == MeetingStatus.failed &&
         processing.phase != ProcessingPhase.transcribing &&
         processing.phase != ProcessingPhase.analyzing) {
+      final String errorText = meeting.errorMessage ?? 'Elaborazione fallita.';
       banners.add(GlassCard(
+        onTap: () => AppDialog.info(
+          context: context,
+          title: 'Dettaglio errore',
+          message: errorText,
+        ),
         child: Row(
           children: [
             Icon(Icons.error_outline, color: t.colors.error),
             const SizedBox(width: AppSpacing.md),
             Expanded(
-              child: Text(
-                meeting.errorMessage ?? 'Elaborazione fallita.',
-                style: AppTypography.bodyMedium
-                    .copyWith(color: t.colors.textSecondary),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    errorText,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppTypography.bodyMedium
+                        .copyWith(color: t.colors.textSecondary),
+                  ),
+                  Text(
+                    'Tocca per i dettagli',
+                    style: AppTypography.caption
+                        .copyWith(color: t.colors.textTertiary),
+                  ),
+                ],
               ),
             ),
             GhostButton(
@@ -485,11 +503,18 @@ class _RecordingCard extends StatelessWidget {
                 ),
                 if (recording.errorMessage != null) ...[
                   const SizedBox(height: 2),
-                  Text(recording.errorMessage!,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: AppTypography.caption
-                          .copyWith(color: t.colors.error)),
+                  GestureDetector(
+                    onTap: () => AppDialog.info(
+                      context: context,
+                      title: 'Dettaglio errore',
+                      message: recording.errorMessage!,
+                    ),
+                    child: Text(recording.errorMessage!,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: AppTypography.caption
+                            .copyWith(color: t.colors.error)),
+                  ),
                 ],
               ],
             ),

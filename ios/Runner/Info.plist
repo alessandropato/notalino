@@ -33,6 +33,8 @@
 	<string>Notalino non usa la fotocamera: l'autorizzazione è richiesta da un componente del selettore file, ma non viene utilizzata.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>Notalino non usa la tua posizione.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Notalino usa il microfono per le note vocali: registra un breve audio e lo trascrive nel campo di testo.</string>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>

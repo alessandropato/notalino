@@ -117,7 +117,19 @@ class _NewMeetingScreenState extends ConsumerState<NewMeetingScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const SectionHeader(title: 'Contesto', eyebrow: 'Facoltativo'),
+                SectionHeader(
+                  title: 'Contesto',
+                  eyebrow: 'Facoltativo',
+                  trailing: VoiceInputButton(
+                    onTranscribed: (String text) => setState(() {
+                      final String current = _contextCtrl.text.trim();
+                      _contextCtrl.text = current.isEmpty ? text : '$current $text';
+                      _contextCtrl.selection = TextSelection.collapsed(
+                        offset: _contextCtrl.text.length,
+                      );
+                    }),
+                  ),
+                ),
                 const SizedBox(height: AppSpacing.md),
                 AppTextField(
                   controller: _contextCtrl,

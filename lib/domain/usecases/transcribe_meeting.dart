@@ -1,7 +1,10 @@
+import 'dart:async';
+
 import 'package:uuid/uuid.dart';
 
 import '../../core/constants/audio_constants.dart';
 import '../../core/constants/openai_constants.dart';
+import '../../core/errors/app_exceptions.dart';
 import '../entities/meeting.dart';
 import '../entities/meeting_status.dart';
 import '../entities/recording.dart';
@@ -135,8 +138,20 @@ class TranscribeMeeting {
           chunkTotal: segments.length,
         ));
 
-        final TranscriptionResult result =
-            await _transcription.transcribeFile(segments[c]);
+        // Rete di sicurezza (SRD §6.5): oltre ai timeout HTTP, un limite
+        // massimo assoluto per chunk. Protegge dal caso in cui una richiesta
+        // resti "appesa" senza mai generare un errore di rete (es. socket
+        // sospeso da iOS quando l'app va in background/schermo bloccato
+        // durante un'attesa lunga) — senza questo, la riunione resterebbe
+        // bloccata in trascrizione a tempo indeterminato.
+        final TranscriptionResult result = await _transcription
+            .transcribeFile(segments[c])
+            .timeout(
+              const Duration(minutes: 25),
+              onTimeout: () => throw const NetworkException(
+                'La trascrizione non ha risposto entro il tempo massimo previsto.',
+              ),
+            );
         if (c > 0) buffer.write(' ');
         buffer.write(result.text.trim());
         totalAudioSeconds += result.audioSeconds ?? 0;

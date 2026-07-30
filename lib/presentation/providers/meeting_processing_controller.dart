@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:wakelock_plus/wakelock_plus.dart';
 
 import '../../domain/entities/meeting.dart';
 import '../../domain/entities/meeting_status.dart';
@@ -74,6 +75,11 @@ class MeetingProcessingController extends Notifier<ProcessingState> {
   }
 
   Future<void> process() async {
+    // Tiene lo schermo acceso per tutta l'elaborazione: l'auto-lock di iOS
+    // sospende l'app e le richieste di rete in corso restano appese senza
+    // mai andare in errore — causa principale del blocco su riunioni lunghe,
+    // la cui trascrizione può richiedere più tempo del timer di auto-lock.
+    await WakelockPlus.enable();
     try {
       state = const ProcessingState(
         phase: ProcessingPhase.transcribing,
@@ -107,11 +113,14 @@ class MeetingProcessingController extends Notifier<ProcessingState> {
         phase: ProcessingPhase.error,
         errorMessage: _humanError(e),
       );
+    } finally {
+      await WakelockPlus.disable();
     }
   }
 
   /// Solo rigenerazione dell'analisi (SRD §6bis.5), quando serve ri-analizzare.
   Future<void> reanalyzeOnly() async {
+    await WakelockPlus.enable();
     try {
       state = const ProcessingState(
         phase: ProcessingPhase.analyzing,
@@ -124,6 +133,8 @@ class MeetingProcessingController extends Notifier<ProcessingState> {
         phase: ProcessingPhase.error,
         errorMessage: _humanError(e),
       );
+    } finally {
+      await WakelockPlus.disable();
     }
   }
 

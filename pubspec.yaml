@@ -48,6 +48,16 @@ dependencies:
   # 4.x distribuisce XCFramework con slice arm64-simulatore (Apple Silicon).
   ffmpeg_kit_flutter_new: ^4.5.3
 
+  # Mantiene lo schermo acceso durante trascrizione/analisi: su iOS il blocco
+  # schermo sospende l'app e le richieste di rete in corso restano appese
+  # senza mai andare in errore (causa nota di "trascrizione bloccata" su
+  # riunioni lunghe, dove l'attesa supera facilmente l'auto-lock).
+  wakelock_plus: ^1.2.10
+
+  # Note vocali: registra un breve audio e lo trascrive con Whisper per
+  # compilare i campi di testo (contesto, chat) a voce invece che a tastiera.
+  record: ^7.1.1
+
   # Utilità
   uuid: ^4.5.1
   flutter_svg: ^2.0.10 # logo/icona vettoriale in-app
